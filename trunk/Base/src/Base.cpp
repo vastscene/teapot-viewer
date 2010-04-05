@@ -20,7 +20,7 @@
 
 #include "wx/treectrl.h"
 
-#if defined(_MSC_VER)
+#if 0 //defined(_MSC_VER)
 #include "Direct3DWnd.h"
 #else
 #include "OpenGLWnd.h"
@@ -58,7 +58,7 @@ public:
 		wxID_CAMERA9,
 	};
 
-	MainFrame(): 
+	MainFrame():
 		wxFrame(NULL, wxID_ANY, wxT("Teapot Viewer"), wxDefaultPosition, wxSize(640, 480)),
 		m_p3DWnd(NULL), m_pToolbar(NULL), m_pTree(NULL), m_pGauge(NULL),
 		m_SceneIO()
@@ -68,13 +68,7 @@ public:
 		m_mgr.SetManagedWindow(this);
 
 		wxSystemOptions::SetOption(wxT("msw.remap"), 2);
-				
-		if( m_p3DWnd == NULL )
-			m_p3DWnd = new wx3DWnd(this);
 
-		m_mgr.AddPane(m_p3DWnd, wxAuiPaneInfo().
-			      Name(wxT("3d")).Caption(wxT("wx3DWnd")).
-			      CenterPane().PaneBorder(false));
 #if 0
 		m_mgr.AddPane( this->CreateTreeCtrl(), wxAuiPaneInfo().
 			Name(wxT("tree")).Caption(wxT("SceneTree")).LeftDockable()
@@ -82,9 +76,9 @@ public:
 #endif
 		////////////
 
-	
+
 		//Menu
-		
+
 		wxMenu* pFileMenu = new wxMenu;
 		pFileMenu->Append(wxID_OPEN, _T("&Open...\tCtrl-O"));
 		Connect( wxID_OPEN, wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MainFrame::OnOpenFile));
@@ -116,7 +110,7 @@ public:
 
 		pViewMenu->AppendCheckItem(wxID_FULLSCREEN, _T("Fullscreen\tF11"))->Check(false);
 		Connect( wxID_FULLSCREEN, wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MainFrame::OnFullscreen));
-		
+
 
 		wxMenu* pHelpMenu = new wxMenu;
 		pHelpMenu->Append(wxID_ABOUT, _T("&About.."), _T("About.."));
@@ -142,7 +136,7 @@ public:
 		m_pToolbar->AddTool(wxID_PERSPECTIVE, wxT("Perspective"), wxBitmap(wxT("PERSPECTIVE_BMP")), wxT("Perspective Projection"), ::wxITEM_RADIO);
 		m_pToolbar->AddTool(wxID_ORTHOGONAL, wxT("Orthogonal"), wxBitmap(wxT("ORTHOGONAL_BMP")), wxT("Orthogonal Projection"), ::wxITEM_RADIO);
 		m_pToolbar->Realize();
-		
+
 		m_pToolbar->AddSeparator();
 
 		m_mgr.AddPane(m_pToolbar, wxAuiPaneInfo().Name(wxT("tb1")).Caption(wxT("Big Toolbar")).
@@ -153,6 +147,13 @@ public:
 		this->CreateStatusBar();
 
 		// Finish
+
+		if( m_p3DWnd == NULL )
+			m_p3DWnd = new wx3DWnd(this);
+
+		m_mgr.AddPane(m_p3DWnd, wxAuiPaneInfo().
+			      Name(wxT("3d")).Caption(wxT("wx3DWnd")).
+			      CenterPane().PaneBorder(false));
 
 		m_mgr.Update();
 	}
@@ -198,7 +199,7 @@ public:
 
 	void OnAbout(wxCommandEvent& WXUNUSED(event))
 	{
-		std::string glinfo = this->m_p3DWnd->GetViewport().getDriver().getDriverInformation();
+		std::string glinfo = this->m_p3DWnd->GetViewport().getDriver()->getDriverInformation();
 
 		std::wstring about = L"http://teapot-viewer.sourceforge.net\n\n";
 		about += m_SceneIO.getAboutString();
@@ -209,7 +210,7 @@ public:
 	bool LoadModel(const std::wstring& sFile, bool bAsThread = false )
 	{
 		GetStatusBar()->SetStatusText( sFile );
-		
+
 		Scene::ptr pScene = Scene::create();
 
 		bool ret = m_SceneIO.read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
@@ -222,7 +223,7 @@ public:
 		pCameraMenu->AppendSeparator();
 
 		for(size_t i = 0; i < pScene->getCameras().size(); i++)
-		{	
+		{
 			Camera::ptr pCam = pScene->getCameras()[i];
 			pCameraMenu->Append(wxID_CAMERA0+i, wxString::From8BitData(pCam->getName().c_str()) );
 		}
@@ -314,7 +315,7 @@ protected:
 			GetStatusBar()->SetFieldsCount(2, widths);
 			wxRect rect;
 			this->GetStatusBar()->GetFieldRect(0, rect);
-			m_pGauge = new wxGauge( this->GetStatusBar(), ::wxID_ANY, 100, 
+			m_pGauge = new wxGauge( this->GetStatusBar(), ::wxID_ANY, 100,
 						rect.GetLeftTop(), rect.GetSize(),
 						wxNO_BORDER|wxHORIZONTAL|wxGA_SMOOTH);
 		}
@@ -371,7 +372,7 @@ public:
 
 		if( this->argc > 1)
 			pFrame->LoadModel( this->argv[1] );
-		
+
 
 		return true;
 	}
