@@ -234,10 +234,21 @@ public:
 
 		for(int i = 0; i < f->cameras_size; i++)
 		{
-			Lib3dsCamera* c = f->cameras[i];
-			Float h = 2.f* (tan(DEG2RAD(c->fov/2.f)) * c->near_range);
-			pScene->addCamera( Camera::create(c->name, h, h, c->near_range, c->far_range,
-					reinterpret_cast<Vec3&>(c->position[0]), reinterpret_cast<Vec3&>(c->target[0]), Vec3(0,0,1)));
+			if(f->cameras != NULL && f->cameras[i] != NULL)
+			{
+				Lib3dsCamera* c = f->cameras[i];
+				Vec3 pos(c->position[0],c->position[1],c->position[2]);
+				Vec3 dir = (Vec3(c->target[0], c->target[1], c->target[2])-pos).normalized();
+				Vec3 up = cross( cross(Vec3(0,0,1),dir), dir) * -1.f;
+
+				Float near = 1;
+				if(c->near_range>0.f)
+					near = c->near_range;
+
+				Float h = 2.f* (tan(DEG2RAD(c->fov/2.f)) * near);
+				pScene->addCamera( Camera::create(c->name, h, h, near, c->far_range, pos, dir, up));
+				break;
+			}
 		}
 
 		lib3ds_file_free(f);

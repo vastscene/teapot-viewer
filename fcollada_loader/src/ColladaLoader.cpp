@@ -54,7 +54,7 @@ class COLLADALoader: public SceneIO::IPlugIn
 private:
 	typedef boost::unordered_map<std::string, std::pair<FCDCamera*, Matrix> > CAMERAS;
 	CAMERAS m_cams;
-	
+
 	boost::filesystem::wpath m_path;
 	IVertexBuffer::ptr m_pVB;
 	boost::unordered_map< std::string, Material::ptr > m_materials;
@@ -79,7 +79,7 @@ private:
 
 	void addPolygons(FCDGeometryPolygons* pPolys, MAT_PRIM_INDICES& matprims )
 	{
-		
+
 		// indices to vertex
 		FCDGeometryPolygonsInput* pi = pPolys->FindInput(FUDaeGeometryInput::POSITION);
 		FCDGeometryPolygonsInput* ni = pPolys->FindInput(FUDaeGeometryInput::NORMAL);
@@ -90,7 +90,7 @@ private:
 		FCDGeometrySource* normals   = pPolys->GetParent()->FindSourceByType(FUDaeGeometryInput::NORMAL);
 		FCDGeometrySource* texcoords  = pPolys->GetParent()->FindSourceByType(FUDaeGeometryInput::TEXCOORD);
 
-		
+
 		Geometry::TYPE PrimMode = Geometry::TRIANGLES;
 		switch(pPolys->GetPrimitiveType())
 		{
@@ -116,7 +116,7 @@ private:
 
 		Uint_vec& idx = matprims[pPolys->GetMaterialSemantic().c_str()][PrimMode];
 
-		for (size_t i = 0; i < pi->GetIndexCount(); i++) 
+		for (size_t i = 0; i < pi->GetIndexCount(); i++)
 		{
 			uint32 _pi = (uint32)pi->GetIndices()[i];
 
@@ -152,22 +152,22 @@ private:
 		//BACKFACE
 		//size_t n = idx.size();
 		//idx.reserve(idx.size()*2);
-		//for (size_t i = n; i > 0; i--) 
+		//for (size_t i = n; i > 0; i--)
 		//	idx.push_back( idx[i-1] );
-	
+
 	}
 	void addMesh(FCDGeometryMesh* pMesh)
 	{
-		if (!pMesh->IsTriangles()) 
+		if (!pMesh->IsTriangles())
 			FCDGeometryPolygonsTools::Triangulate(pMesh);
 
-		for (size_t j = 0; j < pMesh->GetPolygonsCount(); j++) 
+		for (size_t j = 0; j < pMesh->GetPolygonsCount(); j++)
 		{
 			if(FCDGeometryPolygons* pPolys = pMesh->GetPolygons(j))
 				addPolygons( pPolys, m_geometry[ pMesh->GetDaeId().c_str()] );
 		}
 	}
-	
+
 	const Matrix& getTransform(FCDSceneNode* pNode, std::vector<Matrix>& transforms)
 	{
 		if(pNode != NULL)
@@ -206,7 +206,7 @@ private:
 
 		ShapeNode::ptr pShape = ShapeNode::create();
 
-		for(size_t i = 0; i< pNode->GetInstanceCount(); i++) 
+		for(size_t i = 0; i< pNode->GetInstanceCount(); i++)
 		{
 			FCDEntityInstance* pInst = pNode->GetInstance(i);
 			FCDEntity* pEntity = pInst->GetEntity();
@@ -227,13 +227,13 @@ private:
 			{
 				Material::ptr pMat = NULL;
 
-				for( size_t k = 0; k < pGeoInst->GetMaterialInstanceCount(); k++) 
+				for( size_t k = 0; k < pGeoInst->GetMaterialInstanceCount(); k++)
 				{
 					// look for this material in my material lib, so I store a pointer
 					FCDMaterialInstance* pMatInst = pGeoInst->GetMaterialInstance(k);
 					std::string matid = pMatInst->GetMaterial()->GetDaeId().c_str();
 
-					if (std::wstring(pMatInst->GetSemantic().c_str()) == it->first) 
+					if (std::wstring(pMatInst->GetSemantic().c_str()) == it->first)
 					{
 						pMat = m_materials[ matid ];
 						break;
@@ -250,8 +250,8 @@ private:
 
 		if(pShape->GeometryBegin() != pShape->GeometryEnd())
 			pGroup->addChildNodes(pShape);
-		
-		for (size_t i = 0; i < pNode->GetChildrenCount(); i++) 
+
+		for (size_t i = 0; i < pNode->GetChildrenCount(); i++)
 			geo_count += traverseSG( pNode->GetChild(i), pGroup, tra);
 
 		if(pGroup->getChildNodes().size()>0)
@@ -275,7 +275,7 @@ public:
 		set_path(sFile);
 		m_pVB = createVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2 );
 
-		FCDocument doc; 
+		FCDocument doc;
 		if(FCollada::LoadDocumentFromFile(&doc, sFile.c_str() ) == false)
 		{
 			std::cerr << "FCollada::LoadDocumentFromFile(" << sFile.c_str() << ") failed" << std::endl;
@@ -298,18 +298,18 @@ public:
 
 		if(FCDMaterialLibrary* materiallib = doc.GetMaterialLibrary())
 		{
-			for (size_t i = 0; i < materiallib->GetEntityCount(); i++) 
+			for (size_t i = 0; i < materiallib->GetEntityCount(); i++)
 			{
 				FCDMaterial* pFMat = materiallib->GetEntity(i);
 
 				FCDEffect* pFx = pFMat->GetEffect();
-				
+
 				FCDEffectStandard* pProfile = dynamic_cast<FCDEffectStandard*>(pFx->FindProfile(FUDaeProfileType::COMMON));
 
 				if(pProfile)
 				{
 					Material::ptr pMat = m_materials[pFMat->GetDaeId().c_str()] = Material::create();
-					
+
 					RGBA diffuse = reinterpret_cast<const RGBA&>(pProfile->GetDiffuseColor());
 					if( pProfile->GetTransparencyMode() != FCDEffectStandard::/*TransparencyMode::*/A_ONE)
 						diffuse.a = diffuse.a * 0.5f * pProfile->GetTranslucencyFactor();
@@ -327,17 +327,17 @@ public:
 
 					for(size_t j = 0; j < pProfile->GetTextureCount(FUDaeTextureChannel::DIFFUSE); j++)
 					{
-						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::DIFFUSE, j) ) 
+						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::DIFFUSE, j) )
 						{
-							if ( FCDImage* pImage = pTexture->GetImage() ) 
+							if ( FCDImage* pImage = pTexture->GetImage() )
 								pMat->setTexture( Texture::createFromFile( abs_path(pImage->GetFilename().c_str())));
 						}
 					}
 					for(size_t j = 0; j < pProfile->GetTextureCount(FUDaeTextureChannel::REFLECTION); j++)
 					{
-						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::REFLECTION, j) ) 
+						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::REFLECTION, j) )
 						{
-							if ( FCDImage* pImage = pTexture->GetImage() ) 
+							if ( FCDImage* pImage = pTexture->GetImage() )
 								pMat->setReflTexture( Texture::createFromFile( abs_path(pImage->GetFilename().c_str()) ));
 						}
 					}
@@ -349,13 +349,13 @@ public:
 
 		if(FCDGeometryLibrary* geolib = doc.GetGeometryLibrary())
 		{
-			for (size_t i = 0; i < geolib->GetEntityCount(); i++) 
+			for (size_t i = 0; i < geolib->GetEntityCount(); i++)
 			{
 				progress(((float)i)/geolib->GetEntityCount());
 
 				FCDGeometry* pGeo = geolib->GetEntity(i);
 
-				if (pGeo->IsMesh()) 
+				if (pGeo->IsMesh())
 					addMesh(pGeo->GetMesh());
 
 				/*
@@ -365,7 +365,7 @@ public:
 					// add and look for the next geometry
 					m_ptrs_geometries.push_back(m_ptr_geometry);
 					continue;
-				}	
+				}
 
 				// splines
 				if (geo->IsSpline()) {

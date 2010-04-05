@@ -16,9 +16,6 @@
 
 #pragma once
 #include <wx/wx.h>
-
-#undef wxUSE_GLCANVAS
-#define wxUSE_GLCANVAS 1
 #include <wx/glcanvas.h>
 
 #if defined(_MSC_VER)
@@ -33,11 +30,23 @@ using namespace eh;
 
 class wx3DWnd: public wxGLCanvas
 {
-
+	typedef IDriver* (*CreateDriverFunc)(int* pWindow);
+	CreateDriverFunc CreateOpenGL1Driver;
 public:
 	wx3DWnd(wxWindow* parent) :
-		wxGLCanvas(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize), m_aTimer(this, wxID_ANY)
+		wxGLCanvas(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize), m_aTimer(this, wxID_ANY),
+		m_pViewport(new Viewport(NULL))
 	{
+
+#if defined(_MSC_VER)
+		HMODULE hModule = LoadLibraryA("OpenGLDriver.dll");
+		assert(hModule);
+		CreateOpenGL1Driver = (CreateDriverFunc)GetProcAddress(hModule, "CreateOpenGL1Driver");
+#else
+		void* hModule = dlopen("OpenGLDriver.so", RTLD_GLOBAL);
+		CreateOpenGL1Driver = (CreateDriverFunc) dlsym(hModule, "CreateOpenGL1Driver");
+#endif
+
 		Connect(wxEVT_ERASE_BACKGROUND, wxEraseEventHandler( wx3DWnd::OnEraseBG ));
 		Connect(wxEVT_PAINT, wxPaintEventHandler( wx3DWnd::OnPaint ));
 		Connect(wxEVT_SIZE, wxSizeEventHandler( wx3DWnd::OnSize ));
@@ -66,17 +75,23 @@ public:
 		{
 			m_pViewport->control().OnMouseDown(Controller::LBUTTON,
 					event.GetX(), event.GetY());
-			//::SetCapture((HWND)this->GetHWND());
+#if defined(_MSC_VER)
+			::SetCapture((HWND)this->GetHWND());
+#endif
 			Refresh();
 		}
 		else if (event.LeftUp() || event.RightDown())
 		{
-			//if ( ::GetCapture() == (HWND)this->GetHWND() )
+#if defined(_MSC_VER)
+			if ( ::GetCapture() == (HWND)this->GetHWND() )
+#endif
 			{
 				m_pViewport->control().OnMouseUp(
 						Controller::LBUTTON,
 						event.GetX(), event.GetY());
-				//	ReleaseCapture();
+#if defined(_MSC_VER)
+				ReleaseCapture();
+#endif
 				Refresh();
 			}
 		}
@@ -91,8 +106,11 @@ public:
 		}
 		else if (event.Dragging())
 		{
-			//if( ::GetCapture() == (HWND)this->GetHWND() )
+#if defined(_MSC_VER)
+			if ( ::GetCapture() == (HWND)this->GetHWND() )
+#else
 			if (1)
+#endif
 			{
 				eh::Controller::Flags flags = 0;
 
@@ -126,7 +144,6 @@ public:
 	}
 	void OnPaint(wxPaintEvent& event)
 	{
-
 		wxPaintDC dc(this);
 
 		if (!GetContext())
@@ -134,22 +151,12 @@ public:
 
 		SetCurrent();
 
-		if (m_pViewport.get() == NULL)
+		if (m_pViewport->getDriver() == NULL)
 		{
-			typedef IDriver::ptr (*CreateDriverFunc)(int* pWindow);
-
-#if defined(_MSC_VER)
-			CreateDriverFunc CreateOpenGL1Driver = NULL;
-#else
-			void* hModule = dlopen("OpenGLDriver.so", RTLD_GLOBAL);
-			CreateDriverFunc CreateOpenGL1Driver =
-					(CreateDriverFunc) dlsym(hModule,
-							"CreateOpenGL1Driver");
-#endif
 			if (CreateOpenGL1Driver != NULL)
 				if (IDriver::ptr pDriver = CreateOpenGL1Driver( NULL ) )
 				{
-					m_pViewport.reset(new Viewport(pDriver));
+					m_pViewport->setDriver( pDriver );
 					m_pViewport->setDisplayRect(
 							GetClientRect().x,
 							GetClientRect().y,
@@ -158,7 +165,7 @@ public:
 				}
 		}
 
-		if (m_pViewport.get())
+		if (m_pViewport->getDriver())
 			m_pViewport->drawScene();
 
 		SwapBuffers();
@@ -171,22 +178,25 @@ public:
 	{
 		wxGLCanvas::OnSize(event);
 
-		if (!GetContext())
-			return;
+		if (m_pViewport->getDriver() != NULL)
+		{
+			if (!GetContext())
+				return;
 
-		SetCurrent();
-		if (m_pViewport.get())
-			m_pViewport->setDisplayRect(GetClientRect().x,
-					GetClientRect().y,
-					GetClientRect().width,
-					GetClientRect().height);
-		Refresh();
+			SetCurrent();
+			if (m_pViewport.get())
+				m_pViewport->setDisplayRect(GetClientRect().x,
+						GetClientRect().y,
+						GetClientRect().width,
+						GetClientRect().height);
+			Refresh();
+		}
 
 	}
 
 	void ResetView()
 	{
-		if (!m_pViewport.get())
+		if (m_pViewport->getDriver() == NULL)
 			return;
 
 		Refresh();
