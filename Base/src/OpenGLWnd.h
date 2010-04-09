@@ -140,7 +140,7 @@ public:
 
 	void OnEraseBG(wxEraseEvent& event)
 	{
-		event.Skip();
+		//Flicker on Windows? event.Skip();
 	}
 	void OnPaint(wxPaintEvent& event)
 	{

@@ -17,6 +17,7 @@
 #include <IDriver.h>
 #include <Geometry.h>
 #include <Material.h>
+#include "..\SceneGraph\src\SceneIO.h"
 
 using namespace eh;
 
@@ -54,15 +55,29 @@ public:
 
     static OpenGLTexture::ptr create( const std::wstring& file )
     {
-        GLuint texId = 0;
+		SceneIO::File aFile(file);
+		size_t size = aFile.getSize();
+		std::auto_ptr<char> data( new char[size] );
+		
+		if( aFile.getContent(data.get()) != size )
+		{
+			std::wcerr << L"FDirect3D9Texture:: aFile.getContent(data.get()) != size" << std::endl;
+			return NULL;
+		}
 
-        std::wcerr << L"loading: " << file.c_str() << std::endl;
-#if defined(_MSC_VER)
-        texId = ilutGLLoadImage( (wchar_t*)file.c_str() );
-#else
-        texId = ilutGLLoadImage( (char*) std::string(file.begin(), file.end()).c_str() );
-#endif
-        if ( texId == 0 )
+		ILuint	Id;
+		ilGenImages(1, &Id);
+		ilBindImage(Id);
+
+		if (!ilLoadL(IL_TYPE_UNKNOWN, data.get(), size))
+		{
+            std::wcerr << L"ilLoadL failed: " << file.c_str() << std::endl;
+            return NULL;
+        }
+
+		GLuint texId = ilutGLBindTexImage();	// ilutGLLoadImage( (wchar_t*)file.c_str() );
+
+		if ( texId == 0 )
         {
             std::wcerr << L"OpenGLTexture::create failed: " << file.c_str() << std::endl;
             return NULL;
@@ -190,6 +205,7 @@ public:
         setDirectionalLight(1, Vec3(0,0,-1000), Vec3(0,0,1), Vec3(1,1,1), ambient, diffuse, specular);
 
         ilInit();
+        iluInit();
         ilutInit();
         ilutRenderer(ILUT_OPENGL);
     }
@@ -599,7 +615,7 @@ public:
         return true;
     }
 
-    static bool verifyNoErrors(const char* call_function = "")
+    bool verifyNoErrors(const char* call_function = "")
     {
         GLenum errCode = glGetError();
         if (errCode != GL_NO_ERROR)
@@ -616,7 +632,15 @@ extern "C"
 #if defined(_MSC_VER)
     __declspec(dllexport)
 #endif
-    IDriver* CreateOpenGL1Driver(int* pWindow)
+IDriver* CreateOpenGL1Driver(int* pWindow)
 {
-    return new OpenGLDriver(pWindow);
+
+	OpenGLDriver* pDriver = new OpenGLDriver(pWindow);
+	if(pDriver->verifyNoErrors() == false)
+	{
+		delete pDriver;
+		return NULL;
+	}
+	return pDriver;	
+
 }

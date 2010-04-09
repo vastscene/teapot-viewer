@@ -210,12 +210,94 @@ public:
 	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
 	{
 		set_path(sFile);
-		std::string sFileName(sFile.begin(), sFile.end());
+		//std::string sFileName(sFile.begin(), sFile.end());
 
 		m_nCount = 0;
 		m_iCount = 0;
 
-		Lib3dsFile* f = lib3ds_file_open(sFileName.c_str());
+		struct FileIO: public Lib3dsIo
+		{
+			long m_pos;
+			size_t m_size;
+			std::auto_ptr<char> m_pBuff;
+
+			FileIO(const SceneIO::File& file)
+			{
+				this->self = this;
+				m_pos = 0;
+				m_size = file.getContent(m_pBuff);
+
+				seek_func = seek_func_impl;
+				tell_func = tell_func_impl;
+				read_func = read_func_impl;
+				write_func = write_func_impl;
+				log_func = log_func_impl;
+			}
+
+			~FileIO()
+			{
+			}
+
+			static long seek_func_impl(void* self, long offset, Lib3dsIoSeek origin)
+			{
+				switch(origin)
+				{
+				case LIB3DS_SEEK_SET: 
+					reinterpret_cast<FileIO*>(self)->m_pos = offset; 
+					break;
+				case LIB3DS_SEEK_CUR: 
+					reinterpret_cast<FileIO*>(self)->m_pos += offset; 
+					break;
+				case LIB3DS_SEEK_END: 
+					reinterpret_cast<FileIO*>(self)->m_pos = reinterpret_cast<FileIO*>(self)->m_size - offset; 
+					break;
+				}
+
+				return reinterpret_cast<FileIO*>(self)->m_pos;
+			}
+
+			static long tell_func_impl(void* self)
+			{
+				return reinterpret_cast<FileIO*>(self)->m_pos;
+			}
+
+			static  size_t read_func_impl(void *self, void *buffer, size_t size)
+			{
+				memcpy(buffer, &reinterpret_cast<FileIO*>(self)->m_pBuff.get()[reinterpret_cast<FileIO*>(self)->m_pos], size);
+				reinterpret_cast<FileIO*>(self)->m_pos += size;
+				return size;
+			}
+			static  size_t write_func_impl(void *self, const void *buffer, size_t size)
+			{
+				return 0;
+			}
+			static void log_func_impl(void *self, Lib3dsLogLevel level, int indent, const char *msg)
+			{
+
+			}
+
+			static Lib3dsFile* lib3ds_file_open(const SceneIO::File& aFile) 
+			{
+				Lib3dsFile *file;
+
+				file = lib3ds_file_new();
+				if (!file) 
+				{
+					return NULL;
+				}
+
+				FileIO io(aFile);
+
+				if (io.m_size == 0 || !lib3ds_file_read(file, &io)) 
+					return NULL;
+
+				return file;
+			}
+		};
+
+
+
+		Lib3dsFile* f = FileIO::lib3ds_file_open( sFile );
 		if (!f)
 			return false;
 

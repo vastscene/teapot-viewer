@@ -21,14 +21,17 @@
 #include <Viewport.h>
 using namespace eh;
 
-#include "../../Direct3D9Driver/Direct3D9Driver.h"
-
 class wx3DWnd: public wxWindow
 {
+	typedef IDriver* (*CreateDriverFunc)(int* pWindow);
+	CreateDriverFunc CreateDirec3D9Driver;
 public:
 	wx3DWnd(wxWindow* parent): wxWindow(parent, wxID_ANY), m_aTimer(this, wxID_ANY)
 	{
-		if(IDriver::ptr pDriver = createDirect3D9Driver( (int*)this->GetHWND() ) )
+		HMODULE hModule = LoadLibraryA("Direct3D9Driver.dll");
+		assert(hModule);
+		CreateDirec3D9Driver = (CreateDriverFunc)GetProcAddress(hModule, "createDirect3D9Driver");
+		if(IDriver::ptr pDriver = CreateDirec3D9Driver( (int*)this->GetHWND() ) )
 		{
 			m_pViewport.reset( new Viewport(pDriver) );
 			m_pViewport->setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);		
