@@ -18,7 +18,8 @@
 using namespace eh;
 
 #include <iostream>
-#include <boost/filesystem/path.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/static_assert.hpp>
 
@@ -45,6 +46,9 @@ using namespace eh;
 #include <FCDocument/FCDCamera.h>
 #include <FCDocument/FCDAnimated.h>
 #include <FCDocument/FCDAnimationCurve.h>
+
+#include "FUtils/FUFileManager.h"
+#include "FColladaPlugin.h"
 
 #include <map>
 
@@ -272,13 +276,24 @@ public:
 
 	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
 	{
-		set_path(sFile);
+		SceneIO::File aFile(sFile);
+
+		set_path(aFile.getPath());
 		m_pVB = createVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2 );
 
 		FCDocument doc;
-		if(FCollada::LoadDocumentFromFile(&doc, sFile.c_str() ) == false)
+		std::auto_ptr<char> data;
+		size_t size = aFile.getContent(data);
+		if( size == 0 )
 		{
-			std::cerr << "FCollada::LoadDocumentFromFile(" << sFile.c_str() << ") failed" << std::endl;
+			std::wcerr << L"FaFile.getContent(data.get()) != size" << std::endl;
+			return false;
+		}
+
+		
+		if( FCollada::LoadDocumentFromMemory(aFile.getPath().c_str(), &doc, data.get(), size ) == false)
+		{
+			std::wcerr << L"FCollada::LoadDocumentFromMemory(" << aFile.getPath().c_str() << L") failed" << std::endl;
 			return false;
 		}
 
