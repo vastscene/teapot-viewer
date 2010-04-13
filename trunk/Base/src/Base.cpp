@@ -20,7 +20,7 @@
 
 #include "wx/treectrl.h"
 
-#if 0 //defined(_MSC_VER)
+#if defined(_MSC_VER)
 #include "Direct3DWnd.h"
 #else
 #include "OpenGLWnd.h"
@@ -61,7 +61,7 @@ public:
 	MainFrame():
 		wxFrame(NULL, wxID_ANY, wxT("Teapot Viewer"), wxDefaultPosition, wxSize(640, 480)),
 		m_p3DWnd(NULL), m_pToolbar(NULL), m_pTree(NULL), m_pGauge(NULL),
-		m_SceneIO()
+		m_pSceneIO(NULL)
 	{
 		this->SetIcon( wxIcon(wxT("BASE_ICO")) );
 
@@ -97,13 +97,11 @@ public:
 		pViewMenu->AppendCheckItem(wxID_BACKGROUND, _T("Back&ground\tG"))->Check();
 		pViewMenu->AppendSeparator();
 		pViewMenu->AppendCheckItem(wxID_BOUNDINGS, _T("&BoundingBoxes\tB"))->Check(false);
-		pViewMenu->AppendCheckItem(wxID_AABBTREE, _T("Word-&AABB-Tree\tA"))->Check(false);
+		pViewMenu->AppendCheckItem(wxID_AABBTREE, _T("Sce&ne-AABB-Tree\tN"))->Check(false);
 		pViewMenu->AppendSeparator();
 		Connect( wxID_WIREFRAME, wxID_AABBTREE, wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MainFrame::OnView));
 
 		wxMenu* pCameraMenu = new wxMenu;
-		pCameraMenu->Append(wxID_CAMERA_RESET, _T("&Reset\tR"));
-		pCameraMenu->AppendSeparator();
 		pCameraMenu->AppendRadioItem(wxID_PERSPECTIVE, _T("&Perspective Projection\tP"));
 		pCameraMenu->AppendRadioItem(wxID_ORTHOGONAL, _T("&Orthogonal Projection\tO"));
 		Connect( wxID_CAMERA_RESET, wxID_CAMERA9, wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MainFrame::OnCamera));
@@ -165,7 +163,10 @@ public:
 
 	void OnOpenFile(wxCommandEvent& WXUNUSED(event))
 	{
-		wxFileDialog dlgOpenFile( this, wxT("Open.."), wxEmptyString, wxEmptyString, m_SceneIO.getFileWildcards().c_str());
+	    if(m_pSceneIO == NULL)
+            m_pSceneIO = new SceneIO();
+
+		wxFileDialog dlgOpenFile( this, wxT("Open.."), wxEmptyString, wxEmptyString, m_pSceneIO->getFileWildcards().c_str());
 
 		if( dlgOpenFile.ShowModal() == wxID_OK )
 		{
@@ -177,11 +178,14 @@ public:
 
 	void OnSaveFile(wxCommandEvent& WXUNUSED(event))
 	{
-		wxFileDialog dlgSaveFile( this, wxT("Export.."), wxEmptyString, wxEmptyString, m_SceneIO.getFileWildcards(false).c_str(), wxFD_SAVE );
+        if(m_pSceneIO == NULL)
+            m_pSceneIO = new SceneIO();
+
+		wxFileDialog dlgSaveFile( this, wxT("Export.."), wxEmptyString, wxEmptyString, m_pSceneIO->getFileWildcards(false).c_str(), wxFD_SAVE );
 
 		if( dlgSaveFile.ShowModal() == wxID_OK)
 		{
-			m_SceneIO.write( dlgSaveFile.GetPath().c_str(),
+			m_pSceneIO->write( dlgSaveFile.GetPath().c_str(),
 					m_p3DWnd->GetViewport().getScene(),
 					boost::bind(&MainFrame::OnProgress, this, _1));
 		}
@@ -199,33 +203,38 @@ public:
 
 	void OnAbout(wxCommandEvent& WXUNUSED(event))
 	{
+	    if(m_pSceneIO == NULL)
+            m_pSceneIO = new SceneIO();
+
 		std::string glinfo = this->m_p3DWnd->GetViewport().getDriver()->getDriverInformation();
 
 		std::wstring about = L"http://teapot-viewer.sourceforge.net\n\n";
-		about += m_SceneIO.getAboutString();
+		about += m_pSceneIO->getAboutString();
 		about += std::wstring(glinfo.begin(), glinfo.end());
 		wxMessageBox( about.c_str() );
 	}
 
 	bool LoadModel(const std::wstring& sFile, bool bAsThread = false )
 	{
+        if(m_pSceneIO == NULL)
+            m_pSceneIO = new SceneIO();
+
 		GetStatusBar()->SetStatusText( sFile );
 
 		Scene::ptr pScene = Scene::create();
 
-		bool ret = m_SceneIO.read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
+		bool ret = m_pSceneIO->read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
 
 		wxMenu* pCameraMenu = new wxMenu;
-		pCameraMenu->Append(wxID_CAMERA_RESET, _T("&Reset\tR"));
-		pCameraMenu->AppendSeparator();
 		pCameraMenu->AppendRadioItem(wxID_PERSPECTIVE, _T("&Perspective Projection\tP"));
 		pCameraMenu->AppendRadioItem(wxID_ORTHOGONAL, _T("&Orthogonal Projection\tO"));
 		pCameraMenu->AppendSeparator();
+		pCameraMenu->Append(wxID_CAMERA_RESET, _T("&Default\t1"));
 
 		for(size_t i = 0; i < pScene->getCameras().size(); i++)
 		{
 			Camera::ptr pCam = pScene->getCameras()[i];
-			pCameraMenu->Append(wxID_CAMERA0+i, wxString::From8BitData(pCam->getName().c_str()) );
+			pCameraMenu->Append(wxID_CAMERA0+i, wxString::From8BitData(pCam->getName().c_str()) + wxString::Format(wxT("\t%d"),i+2) );
 		}
 
 		wxMenu* old = GetMenuBar()->Replace(2, pCameraMenu, _T("&Camera"));
@@ -357,7 +366,7 @@ protected:
 	wxAuiManager m_mgr;
 	wxTreeCtrl* m_pTree;
 	wxGauge* m_pGauge;
-	SceneIO  m_SceneIO;
+	SceneIO* m_pSceneIO;
 
 };
 

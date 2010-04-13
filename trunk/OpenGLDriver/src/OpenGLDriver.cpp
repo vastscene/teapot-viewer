@@ -17,7 +17,7 @@
 #include <IDriver.h>
 #include <Geometry.h>
 #include <Material.h>
-#include "..\SceneGraph\src\SceneIO.h"
+#include <SceneIO.h>
 
 using namespace eh;
 
@@ -48,6 +48,81 @@ BOOST_STATIC_ASSERT(sizeof(Matrix) == sizeof(GLfloat)*16);
 BOOST_STATIC_ASSERT(sizeof(RGBA) == sizeof(GLfloat)*4);
 BOOST_STATIC_ASSERT(sizeof(Rect) == sizeof(GLfloat)*4);
 
+static PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
+static PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
+static PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
+static PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
+
+
+class OpenGLVBO: public IResource
+{
+public:
+    typedef IResource::pointer<OpenGLVBO> ptr;
+
+    static OpenGLVBO::ptr create( IVertexBuffer::ptr pBuff )
+    {
+        OpenGLVBO* ret = NULL;
+
+        if (glGenBuffersARB && glBindBufferARB && glBufferDataARB)
+        {
+            GLuint id = 0;
+            glGenBuffersARB(1, &id);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, id);
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB, pBuff->getBufferSize(), pBuff->getBuffer(), GL_STATIC_DRAW_ARB);
+
+            ret = new OpenGLVBO(id, pBuff->getStride());
+            pBuff->m_resource = ret;
+        }
+
+        return ret;
+    }
+
+    void bind()
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vboid);
+
+        if (m_stride >= sizeof(Vec3))
+        {
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, m_stride, 0);
+        }
+
+        if (m_stride >= sizeof(Vec3)*2)
+        {
+            glEnableClientState(GL_NORMAL_ARRAY);
+            glNormalPointer(GL_FLOAT, m_stride, (GLvoid*)sizeof(Vec3));
+        }
+
+        if (m_stride > sizeof(Vec3)*2)
+        {
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(2, GL_FLOAT, m_stride, (GLvoid*)(sizeof(Vec3)*2));
+        }
+    }
+
+    void unbind()
+    {
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    }
+
+private:
+    OpenGLVBO(GLuint vboid, GLuint stride):m_vboid(vboid),m_stride(stride)
+    {
+
+    }
+    ~OpenGLVBO()
+    {
+        glDeleteBuffersARB(1, &m_vboid);
+    }
+
+    GLuint m_vboid;
+    GLuint m_stride;
+};
+
 class OpenGLTexture: public IResource
 {
 public:
@@ -55,29 +130,31 @@ public:
 
     static OpenGLTexture::ptr create( const std::wstring& file )
     {
-		SceneIO::File aFile(file);
-		size_t size = aFile.getSize();
-		std::auto_ptr<char> data( new char[size] );
-		
-		if( aFile.getContent(data.get()) != size )
-		{
-			std::wcerr << L"FDirect3D9Texture:: aFile.getContent(data.get()) != size" << std::endl;
-			return NULL;
-		}
+        SceneIO::File aFile(file);
+        std::auto_ptr<char> data;
+        size_t size = aFile.getContent(data);
 
-		ILuint	Id;
-		ilGenImages(1, &Id);
-		ilBindImage(Id);
+        if ( size == 0 )
+        {
+            std::wcerr << L"OpenGLTexture::creae(" << file.c_str() << ") aFile.getContent(data.get()) != size" << std::endl;
+            return NULL;
+        }
 
-		if (!ilLoadL(IL_TYPE_UNKNOWN, data.get(), size))
-		{
+        ILuint	Id;
+        ilGenImages(1, &Id);
+        ilBindImage(Id);
+
+        std::wcout << L"creating Texture " << file.c_str() << L"..." << std::endl;
+
+        if (!ilLoadL(IL_TYPE_UNKNOWN, data.get(), size))
+        {
             std::wcerr << L"ilLoadL failed: " << file.c_str() << std::endl;
             return NULL;
         }
 
-		GLuint texId = ilutGLBindTexImage();	// ilutGLLoadImage( (wchar_t*)file.c_str() );
+        GLuint texId = ilutGLBindTexImage();	// ilutGLLoadImage( (wchar_t*)file.c_str() );
 
-		if ( texId == 0 )
+        if ( texId == 0 )
         {
             std::wcerr << L"OpenGLTexture::create failed: " << file.c_str() << std::endl;
             return NULL;
@@ -168,7 +245,8 @@ class OpenGLDriver: public IDriver
 {
     Matrix m_world;
     Matrix m_view;
-
+    Matrix m_shadow;
+    bool m_bDrawShadow;
 public:
 
     typedef IDriver::pointer<OpenGLDriver> ptr;
@@ -189,8 +267,6 @@ public:
 
         glShadeModel(GL_SMOOTH);
 
-        glEnable(GL_TEXTURE_2D);
-
         glEnable(GL_LIGHTING);
         glEnable(GL_NORMALIZE);
         glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
@@ -208,6 +284,12 @@ public:
         iluInit();
         ilutInit();
         ilutRenderer(ILUT_OPENGL);
+
+        glGenBuffersARB = (PFNGLGENBUFFERSARBPROC) glGetProcAddress("glGenBuffersARB");
+        glBindBufferARB = (PFNGLBINDBUFFERARBPROC) glGetProcAddress("glBindBufferARB");
+        glBufferDataARB = (PFNGLBUFFERDATAARBPROC) glGetProcAddress("glBufferDataARB");
+        glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC) glGetProcAddress("glDeleteBuffersARB");
+
     }
 
     virtual ~OpenGLDriver()
@@ -365,12 +447,10 @@ public:
         if (bEnable)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDisable(GL_CULL_FACE);
         }
         else
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glEnable(GL_CULL_FACE);
         }
     }
 
@@ -378,11 +458,14 @@ public:
     {
         std::stringstream str;
 
-        str << "OpenGL Driver:" << std::endl;
         str << "-------------------------------------------" << std::endl;
-        str << ""   << (const char*)glGetString(GL_VENDOR) << std::endl;
-        str << "" << (const char*)glGetString(GL_RENDERER) << std::endl;
-        str << ""  << (const char*)glGetString(GL_VERSION) << std::endl;
+        str << "OpenGL Driver:" << std::endl;
+        str << "\t"   << (const char*)glGetString(GL_VENDOR) << std::endl;
+        str << "\t" << (const char*)glGetString(GL_RENDERER) << std::endl;
+        str << "\t"  << (const char*)glGetString(GL_VERSION) << std::endl;
+        str << "-------------------------------------------" << std::endl;
+        str << "TextureLoader:" << std::endl;
+        str << "\tDevIL " << IL_VERSION << std::endl;
 
         return str.str();
     }
@@ -424,12 +507,12 @@ public:
 
     virtual void setShadowMatrix(const Matrix& m)
     {
-
+        m_shadow = m;
     }
 
     virtual void enableShadow(bool bEnable)
     {
-
+        m_bDrawShadow = bEnable;
     }
 
     virtual void enableLighting(bool bEnable)
@@ -554,64 +637,52 @@ public:
             mode = GL_TRIANGLES;
         }
 
-#if 0
-        glBegin(mode);
+        OpenGLVBO::ptr pVB = dynamic_cast<OpenGLVBO*>(node.getVertexBuffer()->m_resource.get());
 
-        for (Uint i = 0; i < node.getIndices().size(); i++ )
+        if (pVB == NULL)
+            pVB = OpenGLVBO::create(node.getVertexBuffer());
+
+        if ( pVB )
         {
-            glNormal3fv( &node.getVertexBuffer()->getNormal( node.getIndices()[i] ).x );
-            glVertex3fv( &node.getVertexBuffer()->getCoord( node.getIndices()[i] ).x );
-            glTexCoord2fv( &node.getVertexBuffer()->getTexCoord( node.getIndices()[i] ).x );
-        }
+            pVB->bind();
 
-        glEnd();
+            if (node.getIndices().size()>0)
+                glDrawElements(mode, (GLsizei)node.getIndices().size(), GL_UNSIGNED_INT, &node.getIndices()[0]);
+            else
+                glDrawArrays(mode, 0, node.getVertexBuffer()->getVertexCount() );
 
-        return true;
-#endif
 
-        void const* vertices = NULL;
-        void const* normals = NULL;
-        void const* texcoords = NULL;
-        void const* colors = NULL;
+            if (m_bDrawShadow)
+            {
+                glMatrixMode(GL_MODELVIEW);
+                glPushMatrix();
+                glLoadMatrixf(&(m_world*m_shadow*m_view)[0]);
 
-        GLint stride = node.getVertexBuffer()->getStride();
+                glNormal3f(0,0,0);  //black color
 
-        if (node.getVertexBuffer()->getStride() == sizeof(Vec3))
-        {
-            vertices = &node.getVertexBuffer()->getCoord(0);
-        }
-        else if (node.getVertexBuffer()->getStride() == sizeof(Vec3)*2)
-        {
-            vertices = &node.getVertexBuffer()->getCoord(0);
-            normals = &node.getVertexBuffer()->getNormal(0);
+                if (node.getIndices().size()>0)
+                    glDrawElements(mode, (GLsizei)node.getIndices().size(), GL_UNSIGNED_INT, &node.getIndices()[0]);
+                else
+                    glDrawArrays(mode, 0, node.getVertexBuffer()->getVertexCount() );
+
+                glPopMatrix();
+            }
+
+            pVB->unbind();
         }
         else
         {
-            vertices = &node.getVertexBuffer()->getCoord(0);
-            normals = &node.getVertexBuffer()->getNormal(0);
-            texcoords = &node.getVertexBuffer()->getTexCoord(0);
+            glBegin(mode);
+
+            for (Uint i = 0; i < node.getIndices().size(); i++ )
+            {
+                glNormal3fv( &node.getVertexBuffer()->getNormal( node.getIndices()[i] ).x );
+                glVertex3fv( &node.getVertexBuffer()->getCoord( node.getIndices()[i] ).x );
+                glTexCoord2fv( &node.getVertexBuffer()->getTexCoord( node.getIndices()[i] ).x );
+            }
+
+            glEnd();
         }
-
-        if (vertices)	glEnableClientState (GL_VERTEX_ARRAY);
-        if (normals)	glEnableClientState (GL_NORMAL_ARRAY);
-        if (texcoords)	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-        if (colors)	glEnableClientState (GL_COLOR_ARRAY);
-
-        if (vertices)	glVertexPointer(3, GL_FLOAT, stride, vertices);
-        if (normals)	glNormalPointer(GL_FLOAT, stride, normals);
-        if (texcoords)	glTexCoordPointer(2, GL_FLOAT, stride, texcoords);
-        if (colors)	glColorPointer(4, GL_UNSIGNED_BYTE, stride, colors);
-
-        if (node.getIndices().size()>0)
-            glDrawElements(mode, (GLsizei)node.getIndices().size(), GL_UNSIGNED_INT, &node.getIndices()[0]);
-        else
-            glDrawArrays(mode, 0, node.getVertexBuffer()->getVertexCount() );
-
-        if (vertices)	glDisableClientState (GL_VERTEX_ARRAY);
-        if (normals)	glDisableClientState (GL_NORMAL_ARRAY);
-        if (texcoords)	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-        if (colors)	glDisableClientState (GL_COLOR_ARRAY);
-
         return true;
     }
 
@@ -632,15 +703,15 @@ extern "C"
 #if defined(_MSC_VER)
     __declspec(dllexport)
 #endif
-IDriver* CreateOpenGL1Driver(int* pWindow)
+    IDriver* CreateOpenGL1Driver(int* pWindow)
 {
 
-	OpenGLDriver* pDriver = new OpenGLDriver(pWindow);
-	if(pDriver->verifyNoErrors() == false)
-	{
-		delete pDriver;
-		return NULL;
-	}
-	return pDriver;	
+    OpenGLDriver* pDriver = new OpenGLDriver(pWindow);
+    if (pDriver->verifyNoErrors() == false)
+    {
+        delete pDriver;
+        return NULL;
+    }
+    return pDriver;
 
 }

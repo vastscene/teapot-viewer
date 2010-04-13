@@ -43,7 +43,10 @@ public:
 		assert(hModule);
 		CreateOpenGL1Driver = (CreateDriverFunc)GetProcAddress(hModule, "CreateOpenGL1Driver");
 #else
-		void* hModule = dlopen("OpenGLDriver.so", RTLD_GLOBAL);
+		void* hModule = dlopen("OpenGLDriver.so", RTLD_NOW);
+		if(!hModule)
+				std::cerr << dlerror() <<  std::endl;
+		assert(hModule);
 		CreateOpenGL1Driver = (CreateDriverFunc) dlsym(hModule, "CreateOpenGL1Driver");
 #endif
 
