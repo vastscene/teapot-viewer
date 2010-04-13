@@ -94,7 +94,7 @@ namespace eh
 						data.reset( new char[finfo.uncompressed_size] );
 
 						ret = (size_t) unzReadCurrentFile(zipfile, data.get(), (unsigned int)finfo.uncompressed_size);
-						
+
 						unzCloseCurrentFile(zipfile);
 						break;
 					}
@@ -208,9 +208,11 @@ namespace eh
 	std::wstring SceneIO::getAboutString() const
 	{
 		std::wstring about;
+		about += L"-------------------------------------------\n";
+		about += L"SceneIO PlugIns:\n";
 		for(size_t i = 0; i < m_pImpl->m_plugins.size(); i++)
 		{
-			about += m_pImpl->m_plugins[i]->about() + L"\n";
+			about += L"\t" + m_pImpl->m_plugins[i]->about() + L"\n";
 		}
 		return about;
 	}
