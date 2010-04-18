@@ -328,7 +328,7 @@ public:
 				{
 					pMat = Material::create(RGBA(it->first->r, it->first->g, it->first->b, it->first->a));
 					if(it->first->tex_image)
-						pMat->setTexture( Texture::createFromFile(it->first->tex_image->name) );
+						pMat->setTexture( SceneIO::createTexture(it->first->tex_image->name) );
 				}
 
 				eh::Geometry::ptr pGeo = eh::Geometry::create(eh::Geometry::TRIANGLES, pVB, it->second);

@@ -18,10 +18,7 @@
 using namespace eh;
 
 #include <iostream>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/static_assert.hpp>
 
 #include <FCollada.h>
 
@@ -59,27 +56,12 @@ private:
 	typedef boost::unordered_map<std::string, std::pair<FCDCamera*, Matrix> > CAMERAS;
 	CAMERAS m_cams;
 
-	boost::filesystem::wpath m_path;
 	IVertexBuffer::ptr m_pVB;
 	boost::unordered_map< std::string, Material::ptr > m_materials;
 
 	typedef boost::unordered_map< Geometry::TYPE, Uint_vec > PRIM_INDICES;
 	typedef boost::unordered_map< std::wstring, PRIM_INDICES > MAT_PRIM_INDICES;
 	boost::unordered_map< std::string, MAT_PRIM_INDICES > m_geometry;
-
-	void set_path( const boost::filesystem::wpath& _path )
-	{
-		m_path = _path;
-		m_path.remove_filename();
-	}
-
-	std::wstring abs_path(const boost::filesystem::wpath& file)
-	{
-		if(!file.is_complete())
-			return m_path.directory_string() + file.file_string();
-		else
-			return file.string();
-	}
 
 	void addPolygons(FCDGeometryPolygons* pPolys, MAT_PRIM_INDICES& matprims )
 	{
@@ -278,7 +260,6 @@ public:
 	{
 		SceneIO::File aFile(sFile);
 
-		set_path(aFile.getPath());
 		m_pVB = createVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2 );
 
 		FCDocument doc;
@@ -290,7 +271,7 @@ public:
 			return false;
 		}
 
-		
+
 		if( FCollada::LoadDocumentFromMemory(aFile.getPath().c_str(), &doc, data.get(), size ) == false)
 		{
 			std::wcerr << L"FCollada::LoadDocumentFromMemory(" << aFile.getPath().c_str() << L") failed" << std::endl;
@@ -345,7 +326,7 @@ public:
 						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::DIFFUSE, j) )
 						{
 							if ( FCDImage* pImage = pTexture->GetImage() )
-								pMat->setTexture( Texture::createFromFile( abs_path(pImage->GetFilename().c_str())));
+								pMat->setTexture( SceneIO::createTexture( pImage->GetFilename().c_str() ));
 						}
 					}
 					for(size_t j = 0; j < pProfile->GetTextureCount(FUDaeTextureChannel::REFLECTION); j++)
@@ -353,7 +334,7 @@ public:
 						if( FCDTexture* pTexture = pProfile->GetTexture(FUDaeTextureChannel::REFLECTION, j) )
 						{
 							if ( FCDImage* pImage = pTexture->GetImage() )
-								pMat->setReflTexture( Texture::createFromFile( abs_path(pImage->GetFilename().c_str()) ));
+								pMat->setReflTexture( SceneIO::createTexture( pImage->GetFilename().c_str() ));
 						}
 					}
 				}

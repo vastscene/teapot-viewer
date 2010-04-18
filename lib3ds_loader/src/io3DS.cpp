@@ -17,8 +17,6 @@
 #include <SceneIO.h>
 using namespace eh;
 
-#include <boost/filesystem/path.hpp>
-
 #include <lib3ds.h>
 
 #include <string.h>
@@ -30,34 +28,13 @@ class C3DSLoader: public SceneIO::IPlugIn
 private:
 	float m_nCount;
 	float m_iCount;
-
-	boost::filesystem::wpath m_path;
-
-	void set_path( const boost::filesystem::wpath& _path )
-	{
-		m_path = _path;
-		m_path.remove_filename();
-	}
-
-	std::wstring abs_path(const boost::filesystem::wpath& file)
-	{
-		if(!file.is_complete())
-			return m_path.directory_string() + file.file_string();
-		else
-			return file.string();
-	}
-	std::wstring abs_path(const std::string& file)
-	{
-		return abs_path( std::wstring( file.begin(), file.end() ) );
-	}
-
 	IVertexBuffer::ptr m_pVB;
 public:
 
 	C3DSLoader():
-		m_nCount(0), 
-		m_iCount(0), 
-		m_pVB( createVertexBuffer( sizeof(Float)*8 ))
+		m_nCount(0),
+		m_iCount(0),
+		m_pVB(NULL)
 	{
 	}
 	virtual ~C3DSLoader()
@@ -65,13 +42,13 @@ public:
 
 	}
 
-	void countNodes(Lib3dsFile *f, Lib3dsNode *first_node) 
+	void countNodes(Lib3dsFile *f, Lib3dsNode *first_node)
 	{
 		Lib3dsNode *p;
 		for (p = first_node; p; p = p->next) {
-			if (p->type == LIB3DS_NODE_MESH_INSTANCE) 
+			if (p->type == LIB3DS_NODE_MESH_INSTANCE)
 			{
-				if (Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(f, (Lib3dsNode*)p)) 
+				if (Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(f, (Lib3dsNode*)p))
 					m_nCount += mesh->nfaces;
 
 				countNodes(f, p->childs);
@@ -83,7 +60,7 @@ public:
 	{
 		Lib3dsNode *p;
 		for (p = first_node; p; p = p->next) {
-			if (p->type == LIB3DS_NODE_MESH_INSTANCE) 
+			if (p->type == LIB3DS_NODE_MESH_INSTANCE)
 			{
 				if(SceneNode::ptr node = makeNode(f, (Lib3dsMeshInstanceNode*)p, progress))
 					nodes.push_back( node );
@@ -95,7 +72,7 @@ public:
 	SceneNode::ptr makeNode(Lib3dsFile *f, Lib3dsMeshInstanceNode *node, SceneIO::progress_callback& progress)
 	{
 		Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(f, (Lib3dsNode*)node);
-		if (!mesh || !mesh->vertices) 
+		if (!mesh || !mesh->vertices)
 			return NULL;
 
 		//fprintf(o, "# object %s\n", node->base.name);
@@ -103,10 +80,10 @@ public:
 
 		Poly normals(mesh->nvertices);
 
-		for (int i = 0; i < mesh->nfaces; ++i) 
+		for (int i = 0; i < mesh->nfaces; ++i)
 		{
 			progress(++m_iCount/m_nCount);
-			
+
 			const Vec3& va = reinterpret_cast<const Vec3&>(mesh->vertices[mesh->faces[i].index[0]]);
 			const Vec3& vb = reinterpret_cast<const Vec3&>(mesh->vertices[mesh->faces[i].index[1]]);
 			const Vec3& vc = reinterpret_cast<const Vec3&>(mesh->vertices[mesh->faces[i].index[2]]);
@@ -120,7 +97,7 @@ public:
 		std::map<int, Uint_vec > faces;
 		Uint_vec edges;
 
-		for (int i = 0; i < mesh->nfaces; ++i) 
+		for (int i = 0; i < mesh->nfaces; ++i)
 		{
 			Uint_vec& indices = faces[mesh->faces[i].material];
 
@@ -172,13 +149,13 @@ public:
 				pMat->setSpecular( RGBA(mat->specular[0],mat->specular[1],mat->specular[2],0) );
 				pMat->setEmission( RGBA(0,0,0,0) );
 				pMat->setSpecularFactor(0);
-				
+
 				if(strlen(mat->texture1_map.name) > 0)
 				{
 					if(pMat->getDiffuse().isBlack())
 						pMat->setDiffuse( RGBA(1,1,1) );
 
-					pMat->setTexture( Texture::createFromFile( abs_path(mat->texture1_map.name) ) );
+					pMat->setTexture( SceneIO::createTexture( mat->texture1_map.name ) );
 				}
 
 				//CString sTextureFile2( mat->texture2_map.name );
@@ -209,9 +186,7 @@ public:
 
 	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
 	{
-		set_path(sFile);
-		//std::string sFileName(sFile.begin(), sFile.end());
-
+	    m_pVB = createVertexBuffer( sizeof(Float)*8 );
 		m_nCount = 0;
 		m_iCount = 0;
 
@@ -242,14 +217,14 @@ public:
 			{
 				switch(origin)
 				{
-				case LIB3DS_SEEK_SET: 
-					reinterpret_cast<FileIO*>(self)->m_pos = offset; 
+				case LIB3DS_SEEK_SET:
+					reinterpret_cast<FileIO*>(self)->m_pos = offset;
 					break;
-				case LIB3DS_SEEK_CUR: 
-					reinterpret_cast<FileIO*>(self)->m_pos += offset; 
+				case LIB3DS_SEEK_CUR:
+					reinterpret_cast<FileIO*>(self)->m_pos += offset;
 					break;
-				case LIB3DS_SEEK_END: 
-					reinterpret_cast<FileIO*>(self)->m_pos = reinterpret_cast<FileIO*>(self)->m_size - offset; 
+				case LIB3DS_SEEK_END:
+					reinterpret_cast<FileIO*>(self)->m_pos = reinterpret_cast<FileIO*>(self)->m_size - offset;
 					break;
 				}
 
@@ -276,19 +251,19 @@ public:
 
 			}
 
-			static Lib3dsFile* lib3ds_file_open(const SceneIO::File& aFile) 
+			static Lib3dsFile* lib3ds_file_open(const SceneIO::File& aFile)
 			{
 				Lib3dsFile *file;
 
 				file = lib3ds_file_new();
-				if (!file) 
+				if (!file)
 				{
 					return NULL;
 				}
 
 				FileIO io(aFile);
 
-				if (io.m_size == 0 || !lib3ds_file_read(file, &io)) 
+				if (io.m_size == 0 || !lib3ds_file_read(file, &io))
 					return NULL;
 
 				return file;

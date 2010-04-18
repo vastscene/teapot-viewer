@@ -26,54 +26,67 @@
 #include "Scene.h"
 
 
-namespace eh{
-
-class API_3D SceneIO
+namespace eh
 {
-public:
+
+    class API_3D SceneIO
+    {
+    public:
         typedef boost::function<void (float)> progress_callback;
+        typedef boost::function<void (const std::wstring&)> status_callback;
 
-		class API_3D File : public boost::noncopyable
-		{
-			std::wstring m_path;
-		public:
-			File(const std::wstring& file); 
-			~File();
+    class API_3D File : public boost::noncopyable
+        {
+            std::wstring m_path;
+        public:
+            File(const std::wstring& file);
+			File(const std::string& file);
+            ~File();
 
-			const std::wstring& getPath() const { return m_path; }
+            const std::wstring  getName() const;
+            const std::wstring& getPath() const
+            {
+                return m_path;
+            }
 
-			size_t getContent(std::auto_ptr<char>& data) const;
-		};
+            size_t getContent(std::auto_ptr<char>& data) const;
+        };
 
-        class IPlugIn : public boost::noncopyable
+    class IPlugIn : public boost::noncopyable
         {
         public:
-		virtual ~IPlugIn(){};
-        	virtual std::wstring about() const = 0;
-        	virtual Uint file_type_count() const = 0;
-        	virtual std::wstring file_type(Uint i) const = 0;
-        	virtual std::wstring file_exts(Uint i) const = 0;
-        	virtual std::wstring rpath() const = 0;
-        	virtual bool canWrite(Uint i) const = 0;
-        	virtual bool canRead(Uint i) const = 0;
+            virtual ~IPlugIn(){};
+            virtual std::wstring about() const = 0;
+            virtual Uint file_type_count() const = 0;
+            virtual std::wstring file_type(Uint i) const = 0;
+            virtual std::wstring file_exts(Uint i) const = 0;
+            virtual std::wstring rpath() const = 0;
+            virtual bool canWrite(Uint i) const = 0;
+            virtual bool canRead(Uint i) const = 0;
 
-        	virtual bool read(const std::wstring& aFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
-			virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
+            virtual bool read(const std::wstring& aFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
+            virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
         };
 
         SceneIO();
         ~SceneIO();
-    
+
+        static void setSetStatusTextCallback(status_callback);
+        static void setStatusText(const std::wstring& text);
+
+		static Texture::ptr createTexture(const std::wstring& text);
+		static Texture::ptr createTexture(const std::string& text);
+
         std::wstring getAboutString() const;
         std::wstring getFileWildcards(bool bLoading = true) const;
 
         bool read(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress = NULL) const;
         bool write(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress = NULL) const;
-private:
+    private:
         bool execute(const std::wstring& file, Scene::ptr pScene, progress_callback progress, bool bLoading ) const;
 
-	struct Impl;
-	Impl* m_pImpl;
-};
+        struct Impl;
+        Impl* m_pImpl;
+    };
 
 } //end namespace

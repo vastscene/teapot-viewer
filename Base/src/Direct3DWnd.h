@@ -16,157 +16,43 @@
 #pragma once
 
 #include <wx/wx.h>
+#include "Base3DWnd.h"
 
-#include <Controller.h>
-#include <Viewport.h>
-using namespace eh;
-
-class wx3DWnd: public wxWindow
+class Direct3D9Wnd: public Base3DWnd<wxWindow>
 {
 	typedef IDriver* (*CreateDriverFunc)(int* pWindow);
 	CreateDriverFunc CreateDirec3D9Driver;
 public:
-	wx3DWnd(wxWindow* parent): wxWindow(parent, wxID_ANY), m_aTimer(this, wxID_ANY)
+
+	Direct3D9Wnd(wxWindow* parent): Base3DWnd(parent)
 	{
 		HMODULE hModule = LoadLibraryA("Direct3D9Driver.dll");
 		assert(hModule);
 		CreateDirec3D9Driver = (CreateDriverFunc)GetProcAddress(hModule, "createDirect3D9Driver");
 		if(IDriver::ptr pDriver = CreateDirec3D9Driver( (int*)this->GetHWND() ) )
 		{
-			m_pViewport.reset( new Viewport(pDriver) );
-			m_pViewport->setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);		
+			GetViewport().setDriver( pDriver );
+			GetViewport().setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);		
 		
-			Connect( -1, wxEVT_ERASE_BACKGROUND, wxEraseEventHandler( wx3DWnd::OnDraw ) );
-			Connect( -1, wxEVT_SIZE, wxSizeEventHandler( wx3DWnd::OnSize ) );
+			Connect( -1, wxEVT_ERASE_BACKGROUND, wxEraseEventHandler( Direct3D9Wnd::OnDraw ) );
+			Connect( -1, wxEVT_SIZE, wxSizeEventHandler( Direct3D9Wnd::OnSize ) );
 
-			Connect( -1, wxEVT_LEFT_DOWN, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-			Connect( -1, wxEVT_LEFT_UP, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-			Connect( -1, wxEVT_RIGHT_DOWN, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-			Connect( -1, wxEVT_RIGHT_UP, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-			Connect( -1, wxEVT_MOTION, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-			Connect( -1, wxEVT_MOUSEWHEEL, wxMouseEventHandler(wx3DWnd::OnMouseEvent) );
-
-			Connect( wxID_ANY, wxEVT_TIMER, wxTimerEventHandler( wx3DWnd::OnTimer) );
-
-			Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(wx3DWnd::OnKeyEvent));
 			this->SetFocus();
 		}
 	}
-	virtual ~wx3DWnd()
+	virtual ~Direct3D9Wnd()
 	{
-	}
-
-	void OnKeyEvent(wxKeyEvent& event)
-	{
-		m_pViewport->control().OnKeyDown( event.GetUnicodeKey() );
-		Refresh();
-	}
-
-	void OnMouseEvent(wxMouseEvent& event)
-	{
-		if( event.LeftDown() || event.RightDown() )
-		{
-			m_pViewport->control().OnMouseDown( Controller::LBUTTON, event.GetX(), event.GetY());
-			::SetCapture((HWND)this->GetHWND());
-			Refresh();
-		}
-		else if( event.LeftUp() || event.RightDown() )
-		{
-			if ( ::GetCapture() == (HWND)this->GetHWND() )
-			{
-				m_pViewport->control().OnMouseUp( Controller::LBUTTON, event.GetX(), event.GetY());
-				ReleaseCapture();
-				Refresh();
-			}
-		}
-		else if(event.GetWheelRotation())
-		{
-			m_pViewport->control().OnMouseWheel(0, event.GetWheelRotation()*event.GetWheelDelta(), event.GetX(), event.GetY());
-			Refresh();
-		}
-		else if( event.Dragging() )
-		{
-			if( ::GetCapture() == (HWND)this->GetHWND() )
-			{
-				eh::Controller::Flags flags = 0;
-
-				if(event.LeftIsDown())
-					flags |= Controller::LBUTTON;
-
-				if(event.RightIsDown())
-					flags |= Controller::RBUTTON;
-
-				m_pViewport->control().OnMouseMove( flags, event.GetX(), event.GetY());
-				
-				Refresh();
-
-				//if(m_pViewport->getModeFlag(Camera::MODE_DRAW_NOT_SIMPLE) == false)
-				//	SetTimer(0, 300,0); 
-			}
-			else
-				m_pViewport->control().OnMouseMove( 0, event.GetX(), event.GetY());
-
-			if(!m_pViewport->isValid())
-				Refresh();
-		}
-
 	}
 
 	void OnDraw(wxEraseEvent& event)
 	{
-		m_pViewport->drawScene();
+		GetViewport().drawScene();
 	}
 
 	void OnSize(wxSizeEvent& event)
 	{
-		m_pViewport->setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);
+		GetViewport().setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);
 		Refresh();
 	}
-
-	void ResetView()
-	{
-		m_pViewport->control().reset();
-		Refresh();
-
-		struct animated
-		{
-			bool test(const SceneNode::vec& nodes)
-			{
-				for(SceneNode::vec::const_iterator it = nodes.begin(); it != nodes.end(); it++)
-				{
-					if(GroupNode* pGroup = dynamic_cast<GroupNode*>((*it).get()))
-					{
-						if(pGroup->isAnimated())
-							return true;
-
-						if( test( pGroup->getChildNodes() ) )
-							return true;
-					}
-				}
-
-				return false;
-			}
-		};
-
-		if( animated().test( m_pViewport->getScene()->getNodes() ) )
-			m_aTimer.Start(20, true);
-		else
-			m_aTimer.Stop();
-	}
-
-	Viewport& GetViewport() { return *m_pViewport; }
-
-	void OnTimer(wxTimerEvent& event )
-	{
-		m_pViewport->control().Animate();
-
-		if(!m_pViewport->isValid())
-			this->Refresh();
-
-		m_aTimer.Start(20, true);
-	}
-private:
-	wxTimer m_aTimer;
-	std::auto_ptr<Viewport> m_pViewport;
 };
 

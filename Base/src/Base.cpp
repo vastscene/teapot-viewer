@@ -20,13 +20,14 @@
 
 #include "wx/treectrl.h"
 
+#include "Base3DWnd.h"
+#include "OpenGLWnd.h"
 #if defined(_MSC_VER)
 #include "Direct3DWnd.h"
-#else
-#include "OpenGLWnd.h"
 #endif
 
 #include <boost/bind.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <Scene.h>
 #include <SceneIO.h>
@@ -145,11 +146,30 @@ public:
 		this->CreateStatusBar();
 
 		// Finish
+#if defined(_MSC_VER)
+		for(int i = 0; i < wxApp::GetInstance()->argc; i++)
+		{
+			if( m_p3DWnd == NULL )
+			{
+				if( boost::equals( wxApp::GetInstance()->argv[i], "/opengl") )
+					m_p3DWnd = new OpenGLWnd(this);
 
+				if( boost::equals( wxApp::GetInstance()->argv[i], "/direct3d9") )
+					m_p3DWnd = new Direct3D9Wnd(this);
+			}
+		}
+#endif
 		if( m_p3DWnd == NULL )
-			m_p3DWnd = new wx3DWnd(this);
+		{
 
-		m_mgr.AddPane(m_p3DWnd, wxAuiPaneInfo().
+#if defined(_MSC_VER)
+			m_p3DWnd = new Direct3D9Wnd(this);
+#else
+			m_p3DWnd = new OpenGLWnd(this);
+#endif
+		}
+
+		m_mgr.AddPane( m_p3DWnd, wxAuiPaneInfo().
 			      Name(wxT("3d")).Caption(wxT("wx3DWnd")).
 			      CenterPane().PaneBorder(false));
 
@@ -158,15 +178,38 @@ public:
 
 	virtual ~MainFrame()
 	{
+		if(m_pSceneIO)
+			delete m_pSceneIO;
+
 		m_mgr.UnInit();
+	}
+
+	virtual void OnInternalIdle()
+	{
+		//SetStatusText( L"Ready" );
+
+		wxFrame::OnInternalIdle();
+	}
+
+	void SetStatusText(const std::wstring& text)
+	{
+		GetStatusBar()->SetStatusText( text );
+	}
+
+	SceneIO* getSceneIO()
+	{
+		SceneIO::setSetStatusTextCallback( boost::bind(&MainFrame::SetStatusText, this, _1) );
+
+	    if(m_pSceneIO == NULL)
+			m_pSceneIO = new SceneIO();
+
+		return m_pSceneIO;
 	}
 
 	void OnOpenFile(wxCommandEvent& WXUNUSED(event))
 	{
-	    if(m_pSceneIO == NULL)
-            m_pSceneIO = new SceneIO();
 
-		wxFileDialog dlgOpenFile( this, wxT("Open.."), wxEmptyString, wxEmptyString, m_pSceneIO->getFileWildcards().c_str());
+		wxFileDialog dlgOpenFile( this, wxT("Open.."), wxEmptyString, wxEmptyString, getSceneIO()->getFileWildcards().c_str());
 
 		if( dlgOpenFile.ShowModal() == wxID_OK )
 		{
@@ -178,15 +221,12 @@ public:
 
 	void OnSaveFile(wxCommandEvent& WXUNUSED(event))
 	{
-        if(m_pSceneIO == NULL)
-            m_pSceneIO = new SceneIO();
-
-		wxFileDialog dlgSaveFile( this, wxT("Export.."), wxEmptyString, wxEmptyString, m_pSceneIO->getFileWildcards(false).c_str(), wxFD_SAVE );
+		wxFileDialog dlgSaveFile( this, wxT("Export.."), wxEmptyString, wxEmptyString, getSceneIO()->getFileWildcards(false).c_str(), wxFD_SAVE );
 
 		if( dlgSaveFile.ShowModal() == wxID_OK)
 		{
-			m_pSceneIO->write( dlgSaveFile.GetPath().c_str(),
-					m_p3DWnd->GetViewport().getScene(),
+			getSceneIO()->write( dlgSaveFile.GetPath().c_str(),
+					GetViewport()->getScene(),
 					boost::bind(&MainFrame::OnProgress, this, _1));
 		}
 	}
@@ -203,27 +243,23 @@ public:
 
 	void OnAbout(wxCommandEvent& WXUNUSED(event))
 	{
-	    if(m_pSceneIO == NULL)
-            m_pSceneIO = new SceneIO();
+		std::string glinfo = GetViewport()->getDriver()->getDriverInformation();
 
-		std::string glinfo = this->m_p3DWnd->GetViewport().getDriver()->getDriverInformation();
-
-		std::wstring about = L"http://teapot-viewer.sourceforge.net\n\n";
-		about += m_pSceneIO->getAboutString();
+		std::wstring about;
+		about += L"TeapotViewer 1.0\n\n";
+		about += L"Copyright (C) 2007-2010 by E.Heidt\nhttp://teapot-viewer.sourceforge.net\n\n";
+		about += getSceneIO()->getAboutString();
 		about += std::wstring(glinfo.begin(), glinfo.end());
 		wxMessageBox( about.c_str() );
 	}
 
 	bool LoadModel(const std::wstring& sFile, bool bAsThread = false )
 	{
-        if(m_pSceneIO == NULL)
-            m_pSceneIO = new SceneIO();
-
-		GetStatusBar()->SetStatusText( sFile );
+		m_sCurrentFile = sFile.c_str();
 
 		Scene::ptr pScene = Scene::create();
 
-		bool ret = m_pSceneIO->read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
+		bool ret = getSceneIO()->read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
 
 		wxMenu* pCameraMenu = new wxMenu;
 		pCameraMenu->AppendRadioItem(wxID_PERSPECTIVE, _T("&Perspective Projection\tP"));
@@ -240,24 +276,47 @@ public:
 		wxMenu* old = GetMenuBar()->Replace(2, pCameraMenu, _T("&Camera"));
 		delete old;
 
-		m_p3DWnd->GetViewport().setScene(pScene);
-		m_p3DWnd->ResetView();
+		GetViewport()->setScene(pScene);
+		ResetView();
+
+		this->SetTitle( SceneIO::File(sFile).getName() );
 		return ret;
 	}
 
 protected:
+
+	void ResetView()
+	{
+		if(OpenGLWnd* wnd = dynamic_cast<OpenGLWnd*>(m_p3DWnd))
+			return wnd->ResetView();
+#if defined(_MSC_VER)
+		if(Direct3D9Wnd* wnd = dynamic_cast<Direct3D9Wnd*>(m_p3DWnd))
+			return wnd->ResetView();
+#endif
+	}
+
+	Viewport* GetViewport()
+	{
+		if(OpenGLWnd* wnd = dynamic_cast<OpenGLWnd*>(m_p3DWnd))
+			return &wnd->GetViewport();
+#if defined(_MSC_VER)
+		if(Direct3D9Wnd* wnd = dynamic_cast<Direct3D9Wnd*>(m_p3DWnd))
+			return &wnd->GetViewport();
+#endif
+		return NULL;
+	}
 
 	void OnCamera(wxCommandEvent& event)
 	{
 		switch( event.GetId() )
 		{
 		case wxID_CAMERA_RESET:
-			m_p3DWnd->GetViewport().setScene( m_p3DWnd->GetViewport().getScene(), m_p3DWnd->GetViewport().getScene()->createOrbitalCamera() );
-			m_p3DWnd->ResetView();
+			GetViewport()->setScene( GetViewport()->getScene(), GetViewport()->getScene()->createOrbitalCamera() );
+			ResetView();
 			break;
 		case wxID_PERSPECTIVE:
 		case wxID_ORTHOGONAL:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_ORTHO, event.GetId() != wxID_PERSPECTIVE );
+			GetViewport()->setModeFlag( Viewport::MODE_ORTHO, event.GetId() != wxID_PERSPECTIVE );
 			this->GetMenuBar()->Check( wxID_PERSPECTIVE, event.GetId() == wxID_PERSPECTIVE );
 			this->GetMenuBar()->Check( wxID_ORTHOGONAL, event.GetId() == wxID_ORTHOGONAL );
 			if( m_pToolbar )
@@ -269,7 +328,7 @@ protected:
 		default:
 			{
 			Uint iCamera = event.GetId() - wxID_CAMERA0;
-			m_p3DWnd->GetViewport().setScene( m_p3DWnd->GetViewport().getScene(), m_p3DWnd->GetViewport().getScene()->getCameras()[iCamera] );
+			GetViewport()->setScene( GetViewport()->getScene(), GetViewport()->getScene()->getCameras()[iCamera] );
 			}
 			break;
 		}
@@ -280,22 +339,22 @@ protected:
 		switch( event.GetId() )
 		{
 		case wxID_WIREFRAME:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_WIREFRAME, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_WIREFRAME, event.IsChecked() );
 			break;
 		case wxID_LIGHTING:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_LIGHTING, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_LIGHTING, event.IsChecked() );
 			break;
 		case wxID_SHADOW:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_SHADOW, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_SHADOW, event.IsChecked() );
 			break;
 		case wxID_BACKGROUND:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_BACKGROUND, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_BACKGROUND, event.IsChecked() );
 			break;
 		case wxID_BOUNDINGS:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_DRAWPRIMBOUNDS, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_DRAWPRIMBOUNDS, event.IsChecked() );
 			break;
 		case wxID_AABBTREE:
-			m_p3DWnd->GetViewport().setModeFlag( Viewport::MODE_DRAWAABBTREE, event.IsChecked() );
+			GetViewport()->setModeFlag( Viewport::MODE_DRAWAABBTREE, event.IsChecked() );
 			break;
 		}
 
@@ -311,19 +370,17 @@ protected:
 				m_pGauge->Hide();
 				delete m_pGauge;
 				m_pGauge = NULL;
-				this->SetTitle( GetStatusBar()->GetStatusText() );
 				GetStatusBar()->SetFieldsCount(1);
-				GetStatusBar()->SetStatusText(wxT("Ready"));
 			}
 			return;
 		}
 
 		if(m_pGauge == NULL)
 		{
-			int widths[] = { 100, -1 };
+			int widths[] = { -1, 100 };
 			GetStatusBar()->SetFieldsCount(2, widths);
 			wxRect rect;
-			this->GetStatusBar()->GetFieldRect(0, rect);
+			this->GetStatusBar()->GetFieldRect(1, rect);
 			m_pGauge = new wxGauge( this->GetStatusBar(), ::wxID_ANY, 100,
 						rect.GetLeftTop(), rect.GetSize(),
 						wxNO_BORDER|wxHORIZONTAL|wxGA_SMOOTH);
@@ -332,7 +389,7 @@ protected:
 		if(m_pGauge)
 		{
 			wxRect rect;
-			this->GetStatusBar()->GetFieldRect(0, rect);
+			this->GetStatusBar()->GetFieldRect(1, rect);
 
 			m_pGauge->SetSize( rect.GetSize() );
 			m_pGauge->Move( rect.GetLeftTop() );
@@ -342,8 +399,8 @@ protected:
 			m_pGauge->Show();
 		}
 
-		const wxString& sFile = GetStatusBar()->GetStatusText();
-		GetStatusBar()->SetStatusText( wxString::Format(wxT("Processing %s ... %d%%"), sFile.c_str(), (int)(p*100) ), 1 );
+		SetStatusText( wxString::Format(wxT("Loading %s ... %d%%"),
+							SceneIO::File(m_sCurrentFile).getName().c_str(), (int)(p*100) ).c_str() );
 	}
 
 	wxTreeCtrl* CreateTreeCtrl()
@@ -361,12 +418,13 @@ protected:
 	    return m_pTree;
 	}
 
-	wx3DWnd* m_p3DWnd;
+	wxWindow* m_p3DWnd;
 	wxToolBar* m_pToolbar;
 	wxAuiManager m_mgr;
 	wxTreeCtrl* m_pTree;
 	wxGauge* m_pGauge;
 	SceneIO* m_pSceneIO;
+	std::wstring m_sCurrentFile;
 
 };
 
@@ -379,8 +437,12 @@ public:
 
 		pFrame->Show(true);
 
-		if( this->argc > 1)
-			pFrame->LoadModel( this->argv[1] );
+		for(int i = 0; i < this->argc; i++)
+		{
+			if(!boost::equals(this->argv[i], "/direct3d9"))
+			if(!boost::equals(this->argv[i], "/opengl"))
+				pFrame->LoadModel( this->argv[i] );
+		}
 
 
 		return true;
