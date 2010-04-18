@@ -53,6 +53,10 @@ static PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
 static PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
 static PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
 
+static Uint s_vertices = 0;
+static Uint s_textures = 0;
+static Uint s_vbos = 0;
+
 
 class OpenGLVBO: public IResource
 {
@@ -112,11 +116,12 @@ public:
 private:
     OpenGLVBO(GLuint vboid, GLuint stride):m_vboid(vboid),m_stride(stride)
     {
-
+        s_vbos++;
     }
     ~OpenGLVBO()
     {
         glDeleteBuffersARB(1, &m_vboid);
+        s_vbos--;
     }
 
     GLuint m_vboid;
@@ -128,15 +133,17 @@ class OpenGLTexture: public IResource
 public:
     typedef IResource::pointer<OpenGLTexture> ptr;
 
-    static OpenGLTexture::ptr create( const std::wstring& file )
+    static OpenGLTexture::ptr create( const std::wstring& sFile )
     {
-        SceneIO::File aFile(file);
+        SceneIO::File aFile(sFile);
+        SceneIO::setStatusText( std::wstring(L"Laoding ") + aFile.getName() + L"...");
+
         std::auto_ptr<char> data;
         size_t size = aFile.getContent(data);
 
         if ( size == 0 )
         {
-            std::wcerr << L"OpenGLTexture::creae(" << file.c_str() << ") aFile.getContent(data.get()) != size" << std::endl;
+            std::wcerr << L"OpenGLTexture::creae(" << sFile.c_str() << ") aFile.getContent(data.get()) != size" << std::endl;
             return NULL;
         }
 
@@ -144,11 +151,11 @@ public:
         ilGenImages(1, &Id);
         ilBindImage(Id);
 
-        std::wcout << L"creating Texture " << file.c_str() << L"..." << std::endl;
+        std::wcout << L"creating Texture " << sFile.c_str() << L"..." << std::endl;
 
         if (!ilLoadL(IL_TYPE_UNKNOWN, data.get(), size))
         {
-            std::wcerr << L"ilLoadL failed: " << file.c_str() << std::endl;
+            std::wcerr << L"ilLoadL failed: " << sFile.c_str() << std::endl;
             return NULL;
         }
 
@@ -156,22 +163,11 @@ public:
 
         if ( texId == 0 )
         {
-            std::wcerr << L"OpenGLTexture::create failed: " << file.c_str() << std::endl;
+            std::wcerr << L"OpenGLTexture::create failed: " << sFile.c_str() << std::endl;
             return NULL;
         }
         else
             return new OpenGLTexture( texId );
-    }
-
-    virtual ~OpenGLTexture()
-    {
-        if (m_texId == 0)
-            return;	//nichts zu tun hier...
-
-        if ( glIsTexture(m_texId) )
-        {
-            glDeleteTextures(1, &m_texId);
-        }
     }
 
     void bindTexture( int stage )
@@ -232,9 +228,22 @@ public:
         OpenGLTexture(0).bindTexture(stage);
     }
 
-protected:
+private:
     OpenGLTexture(Uint res):m_texId(res)
     {
+        s_textures++;
+    }
+    virtual ~OpenGLTexture()
+    {
+        s_textures--;
+
+        if (m_texId == 0)
+            return;	//nichts zu tun hier...
+
+        if ( glIsTexture(m_texId) )
+        {
+            glDeleteTextures(1, &m_texId);
+        }
     }
 private:
     Uint m_texId;
@@ -363,6 +372,8 @@ public:
 
     virtual bool beginScene(bool bDrawBG )
     {
+        s_vertices = 0;
+
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT );
 
         this->setTexture(NULL, 0);
@@ -412,6 +423,14 @@ public:
         glFlush();
 
         verifyNoErrors(__FUNCTION__);
+
+        std::basic_ostringstream<wchar_t> str;
+
+        str << L" Vertices: " << s_vertices;
+        str << L" VBOs: " << s_vbos;
+        str << L" Textures: " << s_textures;
+
+        SceneIO::setStatusText(str.str().c_str());
         return true;
     }
 
@@ -647,9 +666,15 @@ public:
             pVB->bind();
 
             if (node.getIndices().size()>0)
+            {
                 glDrawElements(mode, (GLsizei)node.getIndices().size(), GL_UNSIGNED_INT, &node.getIndices()[0]);
+                s_vertices += node.getIndices().size();
+            }
             else
+            {
                 glDrawArrays(mode, 0, node.getVertexBuffer()->getVertexCount() );
+                s_vertices += node.getVertexBuffer()->getVertexCount();
+            }
 
 
             if (m_bDrawShadow)
@@ -658,12 +683,20 @@ public:
                 glPushMatrix();
                 glLoadMatrixf(&(m_world*m_shadow*m_view)[0]);
 
+                glDisableClientState(GL_NORMAL_ARRAY);
                 glNormal3f(0,0,0);  //black color
 
                 if (node.getIndices().size()>0)
+                {
                     glDrawElements(mode, (GLsizei)node.getIndices().size(), GL_UNSIGNED_INT, &node.getIndices()[0]);
+                    s_vertices += node.getIndices().size();
+                }
                 else
+                {
                     glDrawArrays(mode, 0, node.getVertexBuffer()->getVertexCount() );
+                    s_vertices += node.getVertexBuffer()->getVertexCount();
+                }
+
 
                 glPopMatrix();
             }

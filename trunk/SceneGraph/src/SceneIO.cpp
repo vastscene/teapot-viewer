@@ -32,15 +32,44 @@
 
 namespace eh
 {
+	static boost::filesystem::wpath s_path;
+
+	static void s_set_path( const boost::filesystem::wpath& _path )
+	{
+		s_path = _path;
+		s_path.remove_filename();
+	}
+
+	static std::wstring s_abs_path(const boost::filesystem::wpath& file)
+	{
+		if(!file.is_complete())
+			return (s_path / file).string();
+		else
+			return file.string();
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+
 	SceneIO::File::File(const std::wstring& file):
 		m_path(file)
 	{
+		m_path = s_abs_path(m_path);
+	}
+
+	SceneIO::File::File(const std::string& file):
+		m_path(file.begin(), file.end())
+	{
+		m_path = s_abs_path(m_path);
 	}
 
 	SceneIO::File::~File()
 	{
 	}
 
+	const std::wstring SceneIO::File::getName() const
+	{
+		return boost::filesystem::wpath(m_path).leaf();
+	}
 
 	size_t SceneIO::File::getContent(std::auto_ptr<char>& data) const
 	{
@@ -91,7 +120,7 @@ namespace eh
 					{
 						unzOpenCurrentFile(zipfile);
 
-						data.reset( new char[finfo.uncompressed_size] );
+						data.reset( new char[(unsigned)finfo.uncompressed_size] );
 
 						ret = (size_t) unzReadCurrentFile(zipfile, data.get(), (unsigned int)finfo.uncompressed_size);
 
@@ -109,11 +138,33 @@ namespace eh
 		return 0;
 	}
 
+	Texture::ptr SceneIO::createTexture(const std::string& text)
+	{
+		return createTexture(std::wstring(text.begin(), text.end()));
+	}
+	Texture::ptr SceneIO::createTexture(const std::wstring& text)
+	{
+		return Texture::createFromFile( s_abs_path(text) );
+	}
+
 	struct SceneIO::Impl
 	{
 		std::vector< IPlugIn* > m_plugins;
 		std::map< std::wstring, IPlugIn* > m_ext_plugin_map;
 	};
+
+	static SceneIO::status_callback s_printStatus = NULL;
+
+	void SceneIO::setSetStatusTextCallback(status_callback cb)
+	{
+		s_printStatus = cb;
+	}
+
+	void SceneIO::setStatusText(const std::wstring& text)
+	{
+		if(s_printStatus)
+			s_printStatus(text);
+	}
 
 	SceneIO::~SceneIO()
 	{
@@ -124,33 +175,34 @@ namespace eh
 	}
 	SceneIO::SceneIO():m_pImpl(new Impl())
 	{
-		boost::filesystem::path path = boost::filesystem::initial_path();
+		boost::filesystem::wpath path = boost::filesystem::initial_path<boost::filesystem::wpath>();
 
-		for (boost::filesystem::directory_iterator it(path), end; it != end; ++it)
+		for (boost::filesystem::wdirectory_iterator it(path), end; it != end; ++it)
 		{
 			if ( boost::filesystem::is_directory(it->status()) )
 				continue;
 
-			boost::filesystem::path file = it->leaf();
+			boost::filesystem::wpath file = it->leaf();
+
+			if( !boost::iequals( file.extension(), L".dll" ) && !boost::iequals( file.extension(), L".so" ) )
+				continue;
+
+			setStatusText( std::wstring(L"Loading PlugIn: ") + file.string() + L"..." );
 
 #if defined(_MSC_VER)
-			if( !boost::iequals( file.extension(), L".dll" ) )
-				continue;
 
-			std::string rpath = file.string();
-			boost::algorithm::replace_all(rpath, "/", "\\");
-			boost::algorithm::replace_all(rpath, ".dll", "");
+			std::wstring rpath = file.string();
+			boost::algorithm::replace_all(rpath, L"/", L"\\");
+			boost::algorithm::replace_all(rpath, L".dll", L"");
 			if ( boost::filesystem::is_directory(rpath) )
-				SetDllDirectoryA( rpath.c_str() );
+				SetDllDirectoryW( rpath.c_str() );
 
-			std::string dll = file.string();
-			boost::algorithm::replace_all(dll, "/", "\\");
-			HMODULE hModule = LoadLibraryA(dll.c_str() );
+			std::wstring dll = file.string();
+			boost::algorithm::replace_all(dll, L"/", L"\\");
+			HMODULE hModule = LoadLibraryW(dll.c_str() );
 #else
-			if( !boost::iequals( file.extension(), L".so" ) )
-				continue;
-
-			void* hModule = dlopen(file.string().c_str(), RTLD_GLOBAL);
+            std::string fileA(file.string().begin(), file.string().end());
+			void* hModule = dlopen(fileA.c_str(), RTLD_GLOBAL);
 			if(!hModule)
 				std::cerr << dlerror() <<  std::endl;
 
@@ -166,7 +218,7 @@ namespace eh
 			if(createPlugInFunc createPlugIn = (createPlugInFunc)dlsym(hModule, "XcreatePlugIn"))
 #endif
 			{
-				std::cout << file.string().c_str() << " loaded." << std::endl;
+				std::wcout << file.string().c_str() << L" loaded." << std::endl;
 
 				SceneIO::IPlugIn* pPlugIn = createPlugIn();
 				m_pImpl->m_plugins.push_back( pPlugIn );
@@ -203,6 +255,8 @@ namespace eh
 			#endif
 			*/
 		}
+
+		setStatusText( L"" );
 	}
 
 	std::wstring SceneIO::getAboutString() const
@@ -291,10 +345,7 @@ namespace eh
 
 		try
 		{
-			boost::filesystem::wpath sFile( file );
-
-			if(bLoading)
-				pScene->clear();
+			boost::filesystem::wpath sFile = boost::filesystem::system_complete( file );
 
 			std::wstring ext = sFile.extension();
 			boost::algorithm::to_lower(ext);
@@ -305,7 +356,16 @@ namespace eh
 
 				if(bLoading)
 				{
+		    		s_set_path( sFile );
+
 					if(plugin->read( sFile.string(), pScene, progress) == false)
+						throw -1;
+					else
+						ret = true;
+				}
+				else
+				{
+				   	if(plugin->write( sFile.string(), pScene, progress) == false)
 						throw -1;
 					else
 						ret = true;
@@ -329,11 +389,12 @@ namespace eh
 
 						if( m_pImpl->m_ext_plugin_map.find(ext) != m_pImpl->m_ext_plugin_map.end() )
 						{
-							std::cout << "reading " << sName << "..." << std::endl;
-
 							IPlugIn* plugin = m_pImpl->m_ext_plugin_map.find(ext)->second;
 
 							boost::filesystem::wpath path = sFile / sFile2;
+
+				    		s_set_path( path );
+
 							if(plugin->read( path.string(), pScene, progress) == false)
 								ret = false;
 							else
