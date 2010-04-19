@@ -122,19 +122,19 @@ public:
         _this->m_mapMaterialPoints[material_index].push_back( _this->m_pVB->addVertex( (Vec3&)v0->getPoint(), (Vec3&)v0->getNormal()) );
     }
 
-
+    IVertexBuffer* m_pVB;
     std::map<uint32_t, SceneNode::ptr>* m_pMapNodes;
 
     SceneNode::ptr makeShape(SoNode* node)
     {
-		std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
+        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
         SoCallbackAction cbAction;
 
         GeoetryStruct tmp;
-        tmp.m_pVB = createVertexBuffer( sizeof(Float)*8 );
+        tmp.m_pVB = m_pVB;
 
         cbAction.addTriangleCallback(SoVRMLGeometry::getClassTypeId(), addTriangleCB, &tmp);
         cbAction.addLineSegmentCallback(SoVRMLGeometry::getClassTypeId(), addLineSegmentCB, &tmp);
@@ -143,7 +143,7 @@ public:
         cbAction.apply(node);
 
         ShapeNode::ptr s = ShapeNode::create();
-		(*m_pMapNodes)[node->getNodeId()] = s;
+        (*m_pMapNodes)[node->getNodeId()] = s;
 
         for (std::map<int, Uint_vec>::const_iterator it = tmp.m_mapMaterialTriangles.begin();  it != tmp.m_mapMaterialTriangles.end(); ++it)
             s->addGeometry( tmp.m_mapMaterials[it->first], Geometry::create(Geometry::TRIANGLES, tmp.m_pVB, it->second) );
@@ -155,67 +155,83 @@ public:
             s->addGeometry( tmp.m_mapMaterials[it->first], Geometry::create(Geometry::POINTS, tmp.m_pVB, it->second) );
 
 
-        if(s->GeometryBegin() == s->GeometryEnd())
+        if (s->GeometryBegin() == s->GeometryEnd())
             std::cout << "makeShape, no triangulation with: " << typeid(*node).name() << std::endl;
 
         return s;
 
     }
 
-	SceneNode::ptr makeShape(SoCoordinate3* pCoordNode, SoMaterial* pMaterials, SoIndexedFaceSet* pIFSNode)
-	{
-		if(!pCoordNode || !pIFSNode )
-			return NULL;
+    SceneNode::ptr makeShape(SoCoordinate3* pCoordNode, SoMaterial* pMaterials, SoIndexedFaceSet* pIFSNode)
+    {
+        if (!pCoordNode || !pIFSNode )
+            return NULL;
 
-		std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(pIFSNode->getNodeId());
+        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(pIFSNode->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
-		ShapeNode::ptr s = ShapeNode::create();
-		(*m_pMapNodes)[pIFSNode->getNodeId()] = s;
+        ShapeNode::ptr s = ShapeNode::create();
+        (*m_pMapNodes)[pIFSNode->getNodeId()] = s;
 
-		std::map<int32_t, Uint_vec> indices;
-		IVertexBuffer::ptr pVB = createVertexBuffer( sizeof(Float)*8 );
+        std::map<int32_t, Uint_vec> indices;
+        IVertexBuffer::ptr pVB = m_pVB;
 
-		const SbColor* diffuse = pMaterials->diffuseColor.getValues(0);
-		const int32_t* idx = pIFSNode->coordIndex.getValues(0);
-		const int32_t* midx = pIFSNode->materialIndex.getValues(0);
-		const SbVec3f* coords = pCoordNode->point.getValues(0);
-		for(int i = 0; i < pIFSNode->coordIndex.getNum();)
-		{
-			int32_t mid = 0;
-			const Vec3 p1 = reinterpret_cast<const Vec3&>(coords[ idx[i++] ]) *10.f;
-			const Vec3 p2 = reinterpret_cast<const Vec3&>(coords[ idx[i++] ]) *10.f;
-			const Vec3 p3 = reinterpret_cast<const Vec3&>(coords[ idx[i++] ]) *10.f;
-			const Vec3& n = math3D::calcNormal(p1, p2, p3);
+        const int32_t* idx = pIFSNode->coordIndex.getValues(0);
+        const int32_t* midx = pIFSNode->materialIndex.getValues(0);
+        const SbVec3f* coords = pCoordNode->point.getValues(0);
+        for (int i = 0, m = 0; i < pIFSNode->coordIndex.getNum();)
+        {
+            const Vec3 p1((Vec3&)coords[idx[i]]); i++;
+            const Vec3 p2((Vec3&)coords[idx[i]]); i++;
+            const Vec3 p3((Vec3&)coords[idx[i]]); i++;
+            const Vec3& n = math3D::calcNormal(p1*100.f, p2*100.f, p3*100.f);
 
-			indices[mid].push_back( pVB->addVertex(p1, n) ); 
-			indices[mid].push_back( pVB->addVertex(p2, n) ); 
-			indices[mid].push_back( pVB->addVertex(p3, n) ); 
+            int32_t mid = 0;
 
-			if(idx[i] == -1)
-				i++;
-		}
+            if ( pIFSNode->materialIndex.getNum() == pIFSNode->coordIndex.getNum() / 4 )
+                mid = midx[m++];
+            else if ( pIFSNode->materialIndex.getNum() == pIFSNode->coordIndex.getNum() )
+                mid = midx[i];
 
-		for(std::map<int32_t, Uint_vec>::const_iterator it = indices.begin(); it != indices.end(); ++it)
-		{
-			Material::ptr mat = Material::create( RGBA( diffuse[it->first][0],diffuse[it->first][1],diffuse[it->first][2]) );
-			s->addGeometry( mat, Geometry::create( Geometry::TRIANGLES, pVB, it->second ));
-		}
+            indices[mid].push_back( pVB->addVertex(p1, n) );
+            indices[mid].push_back( pVB->addVertex(p2, n) );
+            indices[mid].push_back( pVB->addVertex(p3, n) );
 
-		return s;
-	}
+            while (idx[i++] != -1);
+        }
+
+
+        for (std::map<int32_t, Uint_vec>::const_iterator it = indices.begin(); it != indices.end(); ++it)
+        {
+            Material::ptr mat = NULL;
+            if (pMaterials)
+            {
+                const SbColor* diffuse = pMaterials->diffuseColor.getValues(0);
+                const float* tranparency = pMaterials->transparency.getValues(0);
+
+                RGBA rgba( diffuse[it->first][0],
+                           diffuse[it->first][1],
+                           diffuse[it->first][2],
+                           1.f-tranparency[it->first]);
+
+                mat = Material::create( rgba );
+            }
+
+            s->addGeometry( mat, Geometry::create( Geometry::TRIANGLES, pVB, it->second ));
+        }
+
+        return s;
+    }
 
     SceneNode::ptr traverseGraph(SoNode* node)
     {
-		std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
+        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
         if (SoGroup* group = dynamic_cast<SoGroup*>(node))
         {
-            std::cout << "SoGroup: " << typeid(*node).name() << std::endl;
-
             GroupNode::ptr g = GroupNode::create();
             (*m_pMapNodes)[node->getNodeId()] = g;
 
@@ -225,35 +241,42 @@ public:
 
             g->setTransform( reinterpret_cast<const Matrix&>(gma.getMatrix()) );
 
-			SoMaterial* materials = NULL;
-			SoCoordinate3* coords = NULL;
-			SoIndexedFaceSet* indices = NULL;
+            //TODO: Normals, TextureCoords and Textures ...
 
-			for (int i = 0; i < group->getNumChildren(); i++)
-			{
-				if(coords == NULL)
-				{
-					if(coords = dynamic_cast<SoCoordinate3*>(group->getChild(i) ))
-						continue;
-				}
+            SoMaterial* materials = NULL;
+            SoCoordinate3* coords = NULL;
+            SoIndexedFaceSet* indices = NULL;
 
-				if(indices == NULL)
-				{
-					if(indices = dynamic_cast<SoIndexedFaceSet*>(group->getChild(i) ))
-						continue;
-				}
+            for (int i = 0; i < group->getNumChildren(); i++)
+            {
+                SoNode* child = group->getChild(i);
 
-				if(materials == NULL)
-				{
-					if(materials = dynamic_cast<SoMaterial*>(group->getChild(i) ))
-						continue;
-				}
+                if (coords == NULL && child->isOfType( SoCoordinate3::getClassTypeId() ))
+                {
+                    coords = dynamic_cast<SoCoordinate3*>(child);
+                    continue;
+                }
 
-				g->addChildNodes( traverseGraph( group->getChild(i) ) );
-			}
+                if (indices == NULL && child->isOfType( SoIndexedFaceSet::getClassTypeId() ))
+                {
+                    indices = dynamic_cast<SoIndexedFaceSet*>(child);
+                    continue;
+                }
 
-			g->addChildNodes( makeShape(coords, materials, indices) );
-		
+                if ( child->isOfType( SoMaterialBinding::getClassTypeId() ) )
+                    continue;
+
+                if (materials == NULL && child->isOfType( SoMaterial::getClassTypeId() ))
+                {
+                    materials = dynamic_cast<SoMaterial*>(child);
+                    continue;
+                }
+
+                g->addChildNodes( traverseGraph( group->getChild(i) ) );
+            }
+
+            g->addChildNodes( makeShape(coords, materials, indices) );
+
             return g;
         }
         else
@@ -262,42 +285,42 @@ public:
         }
     }
 
-	static SbBool ProgressCallback(const SbName & itemid, float fraction, SbBool interruptible, void * userdata)
-	{
-		SceneIO::progress_callback progress_callback = *((SceneIO::progress_callback*)userdata);
-		progress_callback(fraction);
-		return true;
-	}
+    static SbBool ProgressCallback(const SbName & itemid, float fraction, SbBool interruptible, void * userdata)
+    {
+        std::cout << fraction << std::endl;
+        SceneIO::progress_callback progress_callback = *((SceneIO::progress_callback*)userdata);
+        progress_callback(fraction);
+        return true;
+    }
 
     virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
     {
         std::map<uint32_t, SceneNode::ptr> NodesMap;
         m_pMapNodes = &NodesMap;
-        
-        //std::auto_ptr<char> data;
-        //size_t size = SceneIO::File(sFile).getContent(data);
-        //if ( size == 0 )
-        //{
-        //    std::wcerr << L"aFile.getContent(data.get()) != size" << std::endl;
-        //    return false;
-        //}
-        
+        IVertexBuffer::ptr pVB = createVertexBuffer( sizeof(Float)*6 );
+        m_pVB = pVB.get();
+
+        std::auto_ptr<char> data;
+        size_t size = SceneIO::File(sFile).getContent(data);
+        if ( size == 0 )
+        {
+            std::wcerr << L"SceneIO::File::getConent() failed: " << sFile.c_str() << std::endl;
+            return false;
+        }
+
         std::string sFileA(sFile.begin(), sFile.end());
 
         SoDB::init();
         SoNodeKit::init();
-		SoInteraction::init();
+        SoInteraction::init();
 
-		SoDB::addProgressCallback(ProgressCallback, &progress);
+        SoDB::addProgressCallback(ProgressCallback, &progress);
+        SoDB::startNotify();
 
         SoInput input;
-		//if (!input.readBinaryArray((unsigned char)data.get(), size))
-		if (!input.openFile(sFileA.c_str()))
-        {
-            return false;
-        }
+        input.setBuffer( data.get(), size);
 
-		SoSeparator* rootWRLNode = SoDB::readAll(&input);
+        SoSeparator* rootWRLNode = SoDB::readAll(&input);
 
         input.closeFile();
 
