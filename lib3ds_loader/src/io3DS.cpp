@@ -28,7 +28,7 @@ class C3DSLoader: public SceneIO::IPlugIn
 private:
 	float m_nCount;
 	float m_iCount;
-	IVertexBuffer::ptr m_pVB;
+	Ptr<IVertexBuffer> m_pVB;
 public:
 
 	C3DSLoader():
@@ -56,20 +56,20 @@ public:
 		}
 	}
 
-	void makeNodes(Lib3dsFile *f, Lib3dsNode *first_node, SceneNode::vec& nodes, SceneIO::progress_callback& progress)
+	void makeNodes(Lib3dsFile *f, Lib3dsNode *first_node, SceneNodeVector& nodes, SceneIO::progress_callback& progress)
 	{
 		Lib3dsNode *p;
 		for (p = first_node; p; p = p->next) {
 			if (p->type == LIB3DS_NODE_MESH_INSTANCE)
 			{
-				if(SceneNode::ptr node = makeNode(f, (Lib3dsMeshInstanceNode*)p, progress))
+				if(Ptr<SceneNode> node = makeNode(f, (Lib3dsMeshInstanceNode*)p, progress))
 					nodes.push_back( node );
 
 				makeNodes(f, p->childs, nodes, progress);
 			}
 		}
 	}
-	SceneNode::ptr makeNode(Lib3dsFile *f, Lib3dsMeshInstanceNode *node, SceneIO::progress_callback& progress)
+	Ptr<SceneNode> makeNode(Lib3dsFile *f, Lib3dsMeshInstanceNode *node, SceneIO::progress_callback& progress)
 	{
 		Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(f, (Lib3dsNode*)node);
 		if (!mesh || !mesh->vertices)
@@ -78,7 +78,7 @@ public:
 		//fprintf(o, "# object %s\n", node->base.name);
 		//fprintf(o, "g %s\n", node->instance_name[0]? node->instance_name : node->base.name);
 
-		Poly normals(mesh->nvertices);
+		std::vector<Vec3> normals(mesh->nvertices);
 
 		for (int i = 0; i < mesh->nfaces; ++i)
 		{
@@ -131,7 +131,7 @@ public:
 
 		}
 
-		ShapeNode::ptr pShape = ShapeNode::create();
+		Ptr<ShapeNode> pShape = ShapeNode::create();
 
 		if(edges.size() > 0)
 			pShape->addGeometry( Material::Black(), Geometry::create(Geometry::LINES, m_pVB, edges) );
@@ -142,7 +142,7 @@ public:
 			{
 				Lib3dsMaterial* mat = f->materials[it->first];
 
-				Material::ptr pMat = Material::create();
+				Ptr<Material> pMat = Material::create();
 
 				pMat->setDiffuse( RGBA(mat->diffuse[0],mat->diffuse[1],mat->diffuse[2], mat->transparency) );
 				pMat->setAmbient( RGBA(mat->ambient[0],mat->ambient[1],mat->ambient[2], 0) );
@@ -184,9 +184,9 @@ public:
 
 	// Interface //
 
-	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
-	    m_pVB = createVertexBuffer( sizeof(Float)*8 );
+	    m_pVB = CreateVertexBuffer( sizeof(Float)*8 );
 		m_nCount = 0;
 		m_iCount = 0;
 
@@ -281,7 +281,7 @@ public:
 
 		lib3ds_file_eval(f, 0);
 
-		SceneNode::vec nodes;
+		SceneNodeVector nodes;
 
 		countNodes(f, f->nodes);
 		makeNodes(f, f->nodes, nodes, progress);
@@ -309,6 +309,7 @@ public:
 		}
 
 		lib3ds_file_free(f);
+		m_pVB = NULL;
 
 		return true;
 
@@ -344,7 +345,7 @@ public:
 		return true;
 	}
 
-	virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		return false;
 	}

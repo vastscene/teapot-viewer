@@ -57,13 +57,10 @@ static Uint s_vertices = 0;
 static Uint s_textures = 0;
 static Uint s_vbos = 0;
 
-
 class OpenGLVBO: public IResource
 {
 public:
-    typedef IResource::pointer<OpenGLVBO> ptr;
-
-    static OpenGLVBO::ptr create( IVertexBuffer::ptr pBuff )
+    static Ptr<OpenGLVBO> create( Ptr<IVertexBuffer> pBuff )
     {
         OpenGLVBO* ret = NULL;
 
@@ -75,7 +72,6 @@ public:
             glBufferDataARB(GL_ARRAY_BUFFER_ARB, pBuff->getBufferSize(), pBuff->getBuffer(), GL_STATIC_DRAW_ARB);
 
             ret = new OpenGLVBO(id, pBuff->getStride());
-            pBuff->m_resource = ret;
         }
 
         return ret;
@@ -131,9 +127,7 @@ private:
 class OpenGLTexture: public IResource
 {
 public:
-    typedef IResource::pointer<OpenGLTexture> ptr;
-
-    static OpenGLTexture::ptr create( const std::wstring& sFile )
+    static Ptr<OpenGLTexture> create( const std::wstring& sFile )
     {
         SceneIO::File aFile(sFile);
         SceneIO::setStatusText( std::wstring(L"Laoding ") + aFile.getName() + L"...");
@@ -257,8 +251,6 @@ class OpenGLDriver: public IDriver
     Matrix m_shadow;
     bool m_bDrawShadow;
 public:
-
-    typedef IDriver::pointer<OpenGLDriver> ptr;
 
     OpenGLDriver(int* hWnd)
     {
@@ -615,11 +607,10 @@ public:
     {
         if (pTexture)
         {
-            OpenGLTexture::ptr t = dynamic_cast<OpenGLTexture*>(pTexture->m_resource.get());
+            Ptr<OpenGLTexture> t = dynamic_cast<OpenGLTexture*>(pTexture->m_resource.get());
             if (t == NULL)
             {
-                t = OpenGLTexture::create( pTexture->getFile() );
-                pTexture->m_resource = t;
+                pTexture->m_resource = t = OpenGLTexture::create( pTexture->getFile() );
             }
 
             if (t)
@@ -656,12 +647,12 @@ public:
             mode = GL_TRIANGLES;
         }
 
-        OpenGLVBO::ptr pVB = dynamic_cast<OpenGLVBO*>(node.getVertexBuffer()->m_resource.get());
+        Ptr<OpenGLVBO> pVB = node.getVertexBuffer()->m_resource;
 
         if (pVB == NULL)
-            pVB = OpenGLVBO::create(node.getVertexBuffer());
+            pVB = node.getVertexBuffer()->m_resource = OpenGLVBO::create(node.getVertexBuffer());
 
-        if ( pVB )
+        if (pVB != NULL)
         {
             pVB->bind();
 
@@ -710,8 +701,8 @@ public:
             for (Uint i = 0; i < node.getIndices().size(); i++ )
             {
                 glNormal3fv( &node.getVertexBuffer()->getNormal( node.getIndices()[i] ).x );
-                glVertex3fv( &node.getVertexBuffer()->getCoord( node.getIndices()[i] ).x );
                 glTexCoord2fv( &node.getVertexBuffer()->getTexCoord( node.getIndices()[i] ).x );
+                glVertex3fv( &node.getVertexBuffer()->getCoord( node.getIndices()[i] ).x );
             }
 
             glEnd();

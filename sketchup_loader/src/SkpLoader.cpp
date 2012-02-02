@@ -28,7 +28,7 @@ private:
 	float m_nCount;
 	float m_iCount;
 	SceneIO::progress_callback progress;
-	Scene::ptr m_pScene;
+	Ptr<Scene> m_pScene;
 	
 	long GetEntityId(IUnknown* pUnk)
 	{
@@ -195,7 +195,7 @@ private:
 
 		if(nElements>0)
 		{
-			IVertexBuffer::ptr pVB = createVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2);
+			Ptr<IVertexBuffer> pVB = CreateVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2);
 			std::map<long, Uint_vec> faces;
 			Uint_vec edges;
 
@@ -209,7 +209,7 @@ private:
 
 			long objId = GetEntityId(pEntProvider);
 
-			if(SceneNode::ptr pObject = m_objects[objId])
+			if(Ptr<SceneNode> pObject = m_objects[objId])
 			{
 				m_pScene->insertNode( GroupNode::create(pObject, tra) );
 				return;
@@ -254,7 +254,7 @@ private:
 
 			if(pVB->getVertexCount() > 0)
 			{	
-				ShapeNode::ptr shape = ShapeNode::create();
+				Ptr<ShapeNode> shape = ShapeNode::create();
 
 				for(std::map<long, Uint_vec>::const_iterator it = faces.begin(); it != faces.end(); it++)
 					shape->addGeometry( m_materials[it->first], Geometry::create(Geometry::TRIANGLES, pVB, it->second) );
@@ -269,7 +269,7 @@ private:
 		}
 	}
 
-	bool makeFace(CComPtr<ISkpFace> pFace, long mat_idx, IVertexBuffer::ptr pVB, std::map<long, Uint_vec>& faces)
+	bool makeFace(CComPtr<ISkpFace> pFace, long mat_idx, Ptr<IVertexBuffer> pVB, std::map<long, Uint_vec>& faces)
 	{
 		HRESULT hr;
 
@@ -393,8 +393,8 @@ private:
 
 
 	bool m_bImportEdges;
-	std::map<long, Material::ptr> m_materials;
-	std::map<long, SceneNode::ptr> m_objects;
+	std::map<long, Ptr<Material> > m_materials;
+	std::map<long, Ptr<SceneNode> > m_objects;
 	ISkpTextureWriter2* m_pTextureWriter;
 public:
 	SkpLoader():
@@ -407,7 +407,7 @@ public:
 	virtual ~SkpLoader()
 	{}
 
-	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		m_pScene = pScene;
 		this->progress = progress;
@@ -459,7 +459,7 @@ public:
 				material->get_Name(&name); 
 
 
-				Material::ptr pMat = m_materials[ GetEntityId(material) ] = Material::create();
+				Ptr<Material> pMat = m_materials[ GetEntityId(material) ] = Material::create();
 
 
 				double a = 0;
@@ -538,7 +538,7 @@ public:
 		return true;
 	}
 
-	virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		return false;
 	}

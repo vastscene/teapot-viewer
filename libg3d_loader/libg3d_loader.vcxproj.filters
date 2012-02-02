@@ -1,0 +1,497 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="libg3d">
+      <UniqueIdentifier>{450fa7be-0fe9-487f-98ad-f479528a920d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libgsf">
+      <UniqueIdentifier>{795802f9-363b-43eb-afeb-7640dbff5397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libintl">
+      <UniqueIdentifier>{5103f0ff-2da6-4082-a012-ab0121ceebaf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="g3d.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\G3DLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\context.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\face.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\iff.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\material.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\matrix.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\model.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\object.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\plugins.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\primitive.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\quat.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\read.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_buffer.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_file.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_gsf.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_gsf_class.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_read.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\stream_zlib.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\texture.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libg3d-0.0.8\src\vector.c">
+      <Filter>libg3d</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-blob.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-clip-data.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-doc-meta-data.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-docprop-vector.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-msole.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-msvba.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-stdio.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-zip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-bzip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-gzip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-http.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-iochannel.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-memory.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-proxy.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-stdio.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-textline.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-libxml.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-msole-utils.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-open-pkg-utils.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-opendoc-utils.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-msole.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-stdio.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-zip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-bzip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-csv.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-gzip.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-iconv.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-iochannel.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-memory.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-stdio.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-shared-memory.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-structured-blob.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-timestamp.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-utils.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-zip-utils.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libgsf-1.14.7\gsf\version.c">
+      <Filter>libgsf</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\bindtextdom.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcgettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcigettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcngettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dgettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dngettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\explodename.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\finddomain.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\intl-compat.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\l10nflist.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\langprefs.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\loadmsgcat.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localcharset.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localealias.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localename.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\log.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\ngettext.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\osdep.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural-exp.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-args.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-parse.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\relocatable.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\textdomain.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnprintf.c">
+      <Filter>libintl</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-blob.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-clip-data.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-doc-meta-data.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-docprop-vector.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-impl-utils.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-msole.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-msvba.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-stdio.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-zip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-bzip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-gzip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-http.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-iochannel.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-memory.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-proxy.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-stdio.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-textline.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-libxml.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-meta-names.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-msole-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-msole-utils.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-open-pkg-utils.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-opendoc-utils.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-msole.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-stdio.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-zip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-bzip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-csv.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-gzip.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-iconv.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-iochannel.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-memory.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-stdio.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-shared-memory.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-structured-blob.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-timestamp.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-utils.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-zip-impl.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libg3d-0.0.8\src\stream_gsf_class.h">
+      <Filter>libgsf</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\config.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\eval-plural.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gettextP.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gmo.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\hash-string.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\libgnuintl.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\libintl.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\loadinfo.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localcharset.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural-exp.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-args.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-parse.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\relocatable.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnprintf.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnwprintf.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\wprintf-parse.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\xsize.h">
+      <Filter>libintl</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

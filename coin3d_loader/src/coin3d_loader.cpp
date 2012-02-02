@@ -65,8 +65,8 @@ class Coin3DLoader: public SceneIO::IPlugIn
 {
     struct GeoetryStruct
     {
-        IVertexBuffer::ptr m_pVB;
-        std::map<int, Material::ptr> m_mapMaterials;
+        Ptr<IVertexBuffer> m_pVB;
+        std::map<int, Ptr<Material> > m_mapMaterials;
         std::map<int, Uint_vec> m_mapMaterialTriangles;
         std::map<int, Uint_vec> m_mapMaterialLines;
         std::map<int, Uint_vec> m_mapMaterialPoints;
@@ -93,7 +93,7 @@ public:
             float transparency, shininess;
             action->getMaterial(ambient, diffuse, specular, emission, shininess, transparency, material_index);
 
-            Material::ptr m = Material::create( RGBA(diffuse[0], diffuse[1], diffuse[2], transparency) );
+            Ptr<Material> m = Material::create( RGBA(diffuse[0], diffuse[1], diffuse[2], transparency) );
             m->setAmbient( RGBA(ambient[0], ambient[1], ambient[2]) );
             m->setSpecular( RGBA(specular[0], specular[1], specular[2]) );
             m->setSpecularFactor( shininess );
@@ -123,11 +123,11 @@ public:
     }
 
     IVertexBuffer* m_pVB;
-    std::map<uint32_t, SceneNode::ptr>* m_pMapNodes;
+    std::map<uint32_t, Ptr<SceneNode> >* m_pMapNodes;
 
-    SceneNode::ptr makeShape(SoNode* node)
+    Ptr<SceneNode> makeShape(SoNode* node)
     {
-        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
+        std::map<uint32_t, Ptr<SceneNode> >::iterator it = m_pMapNodes->find(node->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
@@ -142,7 +142,7 @@ public:
 
         cbAction.apply(node);
 
-        ShapeNode::ptr s = ShapeNode::create();
+        Ptr<ShapeNode> s = ShapeNode::create();
         (*m_pMapNodes)[node->getNodeId()] = s;
 
         for (std::map<int, Uint_vec>::const_iterator it = tmp.m_mapMaterialTriangles.begin();  it != tmp.m_mapMaterialTriangles.end(); ++it)
@@ -162,20 +162,20 @@ public:
 
     }
 
-    SceneNode::ptr makeShape(SoCoordinate3* pCoordNode, SoMaterial* pMaterials, SoIndexedFaceSet* pIFSNode)
+    Ptr<SceneNode> makeShape(SoCoordinate3* pCoordNode, SoMaterial* pMaterials, SoIndexedFaceSet* pIFSNode)
     {
         if (!pCoordNode || !pIFSNode )
             return NULL;
 
-        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(pIFSNode->getNodeId());
+        std::map<uint32_t, Ptr<SceneNode> >::iterator it = m_pMapNodes->find(pIFSNode->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
-        ShapeNode::ptr s = ShapeNode::create();
+        Ptr<ShapeNode> s = ShapeNode::create();
         (*m_pMapNodes)[pIFSNode->getNodeId()] = s;
 
         std::map<int32_t, Uint_vec> indices;
-        IVertexBuffer::ptr pVB = m_pVB;
+        Ptr<IVertexBuffer> pVB = m_pVB;
 
         const int32_t* idx = pIFSNode->coordIndex.getValues(0);
         const int32_t* midx = pIFSNode->materialIndex.getValues(0);
@@ -185,7 +185,7 @@ public:
             const Vec3 p1((Vec3&)coords[idx[i]]); i++;
             const Vec3 p2((Vec3&)coords[idx[i]]); i++;
             const Vec3 p3((Vec3&)coords[idx[i]]); i++;
-            const Vec3& n = math3D::calcNormal(p1*100.f, p2*100.f, p3*100.f);
+            const Vec3& n = math3D::calcNormal(p1, p2, p3);
 
             int32_t mid = 0;
 
@@ -204,7 +204,7 @@ public:
 
         for (std::map<int32_t, Uint_vec>::const_iterator it = indices.begin(); it != indices.end(); ++it)
         {
-            Material::ptr mat = NULL;
+            Ptr<Material> mat = NULL;
             if (pMaterials)
             {
                 const SbColor* diffuse = pMaterials->diffuseColor.getValues(0);
@@ -224,15 +224,15 @@ public:
         return s;
     }
 
-    SceneNode::ptr traverseGraph(SoNode* node)
+    Ptr<SceneNode> traverseGraph(SoNode* node)
     {
-        std::map<uint32_t, SceneNode::ptr>::iterator it = m_pMapNodes->find(node->getNodeId());
+        std::map<uint32_t, Ptr<SceneNode> >::iterator it = m_pMapNodes->find(node->getNodeId());
         if (it != m_pMapNodes->end())
             return it->second;
 
         if (SoGroup* group = dynamic_cast<SoGroup*>(node))
         {
-            GroupNode::ptr g = GroupNode::create();
+            Ptr<GroupNode> g = GroupNode::create();
             (*m_pMapNodes)[node->getNodeId()] = g;
 
             SbViewportRegion vpr;
@@ -293,11 +293,11 @@ public:
         return true;
     }
 
-    virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+    virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
     {
-        std::map<uint32_t, SceneNode::ptr> NodesMap;
+        std::map<uint32_t, Ptr<SceneNode> > NodesMap;
         m_pMapNodes = &NodesMap;
-        IVertexBuffer::ptr pVB = createVertexBuffer( sizeof(Float)*6 );
+        Ptr<IVertexBuffer> pVB = CreateVertexBuffer( sizeof(Float)*6 );
         m_pVB = pVB.get();
 
         std::auto_ptr<char> data;
@@ -367,7 +367,7 @@ public:
         return true;
     }
 
-    virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+    virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
     {
         return false;
     }
