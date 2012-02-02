@@ -66,6 +66,11 @@ namespace eh
 	{
 	}
 
+	const std::wstring SceneIO::File::getExtension() const
+	{
+		return boost::filesystem::wpath(m_path).extension();
+	}
+
 	const std::wstring SceneIO::File::getName() const
 	{
 		return boost::filesystem::wpath(m_path).leaf();
@@ -138,11 +143,11 @@ namespace eh
 		return 0;
 	}
 
-	Texture::ptr SceneIO::createTexture(const std::string& text)
+	Ptr<Texture> SceneIO::createTexture(const std::string& text)
 	{
 		return createTexture(std::wstring(text.begin(), text.end()));
 	}
-	Texture::ptr SceneIO::createTexture(const std::wstring& text)
+	Ptr<Texture> SceneIO::createTexture(const std::wstring& text)
 	{
 		return Texture::createFromFile( s_abs_path(text) );
 	}
@@ -337,7 +342,7 @@ namespace eh
 
 	}
 
-	bool SceneIO::execute(const std::wstring& file, Scene::ptr pScene, progress_callback progress, bool bLoading ) const
+	bool SceneIO::execute(const std::wstring& file, Ptr<Scene> pScene, progress_callback progress, bool bLoading ) const
 	{
 		bool ret = false;
 
@@ -422,7 +427,7 @@ namespace eh
 
 	static void dummy_callback(float f){}
 
-	bool SceneIO::read(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress) const
+	bool SceneIO::read(const std::wstring& sFile, Ptr<Scene> pScene, progress_callback progress) const
 	{
 		if(progress == NULL)
 			progress = dummy_callback;
@@ -430,7 +435,7 @@ namespace eh
 		return execute(sFile, pScene, progress, true);
 	}
 
-	bool SceneIO::write(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress) const
+	bool SceneIO::write(const std::wstring& sFile, Ptr<Scene> pScene, progress_callback progress) const
 	{
 		if(progress == NULL)
 			progress = dummy_callback;
@@ -439,7 +444,7 @@ namespace eh
 	}
 
 	//#include <boost/thread.hpp>
-	//bool FormatManager::loadAsThread(const std::wstring& sFile, Scene::ptr pScene) const
+	//bool FormatManager::loadAsThread(const std::wstring& sFile, Ptr<Scene> pScene) const
 	//{
 	//	boost::thread( boost::bind(&FormatManager::load, this, sFile, pScene ) );
 	//	return false;

@@ -1,0 +1,73 @@
+LIBRARY
+; g3d exports
+
+EXPORTS
+	XcreatePlugIn
+
+	g3d_context_update_interface
+	g3d_context_update_progress_bar
+	g3d_stream_size
+	g3d_stream_tell
+	g3d_stream_read_line
+	g3d_stream_get_uri
+	g3d_material_new
+	g3d_stream_eof
+	
+	g3d_stream_read_int32_le
+	g3d_stream_read_int8
+	g3d_stream_read
+	g3d_stream_read_int16_le
+	g3d_stream_read_float_le
+	g3d_context_set_bgcolor
+	g3d_stream_skip
+	g3d_vector_transform
+	g3d_stream_seek
+	g3d_stream_read_double_le
+	
+	g3d_stream_read_int32_be
+	g3d_stream_read_int16_be
+	g3d_iff_read_chunk
+	g3d_object_transform
+	g3d_stream_read_float_be
+	
+	g3d_matrix_identity
+	g3d_matrix_scale
+	g3d_matrix_transpose
+	g3d_matrix_dump
+	g3d_matrix_determinant
+	g3d_matrix_translate
+	g3d_matrix_rotate_xyz
+	g3d_matrix_rotate
+	
+	g3d_vector_unify
+	g3d_vector_normal
+	g3d_texture_free
+	g3d_texture_merge_alpha
+	g3d_texture_load
+	g3d_texture_flip_y
+	g3d_texture_load_cached
+	g3d_model_transform
+
+	g3d_texture_prepare
+	g3d_stream_read_cstr
+	g3d_stream_close
+	g3d_stream_open_file
+	g3d_stream_line
+	g3d_stream_read_double_be
+	g3d_model_get_object_by_name
+	
+	g3d_iff_read_ctnr
+	g3d_iff_check
+	g3d_stream_from_buffer
+	g3d_object_duplicate
+	
+	g3d_material_free
+	g3d_object_free
+	g3d_primitive_cylinder
+	g3d_object_merge
+	g3d_primitive_tube
+	g3d_matrix_multiply
+	g3d_iff_id_to_text
+	g3d_stream_open_structured_file_from_stream
+	g3d_primitive_box
+	g3d_iff_handle_chunk

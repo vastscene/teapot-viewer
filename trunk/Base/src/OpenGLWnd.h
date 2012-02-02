@@ -71,7 +71,7 @@ public:
         if (GetViewport().getDriver() == NULL)
         {
             if (CreateOpenGL1Driver != NULL)
-                if (IDriver::ptr pDriver = CreateOpenGL1Driver( NULL ) )
+                if(Ptr<IDriver> pDriver = CreateOpenGL1Driver( NULL ) )
                 {
                     GetViewport().setDriver( pDriver );
                     GetViewport().setDisplayRect(
@@ -99,7 +99,7 @@ public:
         if (GetViewport().getDriver() == NULL)
         {
             if (CreateOpenGL1Driver != NULL)
-                if (IDriver::ptr pDriver = CreateOpenGL1Driver( NULL ) )
+                if( Ptr<IDriver> pDriver = CreateOpenGL1Driver( NULL ) )
                 {
                     GetViewport().setDriver( pDriver );
                     GetViewport().setDisplayRect(

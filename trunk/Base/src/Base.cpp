@@ -257,7 +257,7 @@ public:
 	{
 		m_sCurrentFile = sFile.c_str();
 
-		Scene::ptr pScene = Scene::create();
+		Ptr<Scene> pScene = Scene::create();
 
 		bool ret = getSceneIO()->read( sFile, pScene, boost::bind(&MainFrame::OnProgress, this, _1) );
 
@@ -269,7 +269,7 @@ public:
 
 		for(size_t i = 0; i < pScene->getCameras().size(); i++)
 		{
-			Camera::ptr pCam = pScene->getCameras()[i];
+			Ptr<Camera> pCam = pScene->getCameras()[i];
 			pCameraMenu->Append(wxID_CAMERA0+i, wxString::From8BitData(pCam->getName().c_str()) + wxString::Format(wxT("\t%d"),i+2) );
 		}
 
@@ -449,6 +449,6 @@ public:
 	}
 };
 
-//IMPLEMENT_APP(MyApp)
-IMPLEMENT_APP_CONSOLE(MyApp);
+IMPLEMENT_APP(MyApp)
+//IMPLEMENT_APP_CONSOLE(MyApp);
 

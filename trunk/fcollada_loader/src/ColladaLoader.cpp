@@ -56,8 +56,8 @@ private:
 	typedef boost::unordered_map<std::string, std::pair<FCDCamera*, Matrix> > CAMERAS;
 	CAMERAS m_cams;
 
-	IVertexBuffer::ptr m_pVB;
-	boost::unordered_map< std::string, Material::ptr > m_materials;
+	Ptr<IVertexBuffer> m_pVB;
+	boost::unordered_map< std::string, Ptr<Material> > m_materials;
 
 	typedef boost::unordered_map< Geometry::TYPE, Uint_vec > PRIM_INDICES;
 	typedef boost::unordered_map< std::wstring, PRIM_INDICES > MAT_PRIM_INDICES;
@@ -80,7 +80,7 @@ private:
 		Geometry::TYPE PrimMode = Geometry::TRIANGLES;
 		switch(pPolys->GetPrimitiveType())
 		{
-		case FCDGeometryPolygons::/*PrimitiveType::*/LINES:
+		case FCDGeometryPolygons::LINES:
 			PrimMode = Geometry::LINES;
 			break;
 		case FCDGeometryPolygons::LINE_STRIPS:
@@ -131,16 +131,7 @@ private:
 			{
 				idx.push_back( m_pVB->addVertex( *v, *n, Vec3::Null() ) );
 			}
-
-
 		}
-
-		//BACKFACE
-		//size_t n = idx.size();
-		//idx.reserve(idx.size()*2);
-		//for (size_t i = n; i > 0; i--)
-		//	idx.push_back( idx[i-1] );
-
 	}
 	void addMesh(FCDGeometryMesh* pMesh)
 	{
@@ -181,16 +172,16 @@ private:
 		return transforms[0];;
 	}
 
-	int traverseSG(FCDSceneNode* pNode, GroupNode::ptr pParentGroup, const Matrix& _tra = Matrix::Identity())
+	int traverseSG(FCDSceneNode* pNode, Ptr<GroupNode> pParentGroup, const Matrix& _tra = Matrix::Identity())
 	{
 		int geo_count = 0;
 
 		std::vector< Matrix > transforms(1, Matrix::Identity());
 		Matrix tra = _tra * getTransform(pNode, transforms);
 
-		GroupNode::ptr pGroup = GroupNode::createAnimated( SceneNode::vec(), transforms );
+		Ptr<GroupNode> pGroup = GroupNode::createAnimated( SceneNodeVector(), transforms );
 
-		ShapeNode::ptr pShape = ShapeNode::create();
+		Ptr<ShapeNode> pShape = ShapeNode::create();
 
 		for(size_t i = 0; i< pNode->GetInstanceCount(); i++)
 		{
@@ -211,11 +202,10 @@ private:
 			for(MAT_PRIM_INDICES::const_iterator it = m_geometry[id].begin(),
 				end = m_geometry[id].end(); it != end; it++)
 			{
-				Material::ptr pMat = NULL;
+				Ptr<Material> pMat = NULL;
 
 				for( size_t k = 0; k < pGeoInst->GetMaterialInstanceCount(); k++)
 				{
-					// look for this material in my material lib, so I store a pointer
 					FCDMaterialInstance* pMatInst = pGeoInst->GetMaterialInstance(k);
 					std::string matid = pMatInst->GetMaterial()->GetDaeId().c_str();
 
@@ -256,11 +246,11 @@ public:
 		FCollada::Release();
 	}
 
-	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		SceneIO::File aFile(sFile);
 
-		m_pVB = createVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2 );
+		m_pVB = CreateVertexBuffer( sizeof(Vec3)*2 + sizeof(Float)*2 );
 
 		FCDocument doc;
 		std::auto_ptr<char> data;
@@ -304,7 +294,7 @@ public:
 
 				if(pProfile)
 				{
-					Material::ptr pMat = m_materials[pFMat->GetDaeId().c_str()] = Material::create();
+					Ptr<Material> pMat = m_materials[pFMat->GetDaeId().c_str()] = Material::create();
 
 					RGBA diffuse = reinterpret_cast<const RGBA&>(pProfile->GetDiffuseColor());
 					if( pProfile->GetTransparencyMode() != FCDEffectStandard::/*TransparencyMode::*/A_ONE)
@@ -341,8 +331,6 @@ public:
 			}
 		}
 
-		//Meshes
-
 		if(FCDGeometryLibrary* geolib = doc.GetGeometryLibrary())
 		{
 			for (size_t i = 0; i < geolib->GetEntityCount(); i++)
@@ -354,29 +342,21 @@ public:
 				if (pGeo->IsMesh())
 					addMesh(pGeo->GetMesh());
 
-				/*
-				// nurbs
-				if (geo->IsPSurface()) {
-					m_ptr_geometry=dynamic_cast<CCLGeometry*>(new CCLSurface(geo->GetPSurface()));
-					// add and look for the next geometry
-					m_ptrs_geometries.push_back(m_ptr_geometry);
-					continue;
+				if (pGeo->IsPSurface())
+				{
+				    std::cerr << "pGeo->IsPSurface()" << std::endl;
 				}
 
-				// splines
-				if (geo->IsSpline()) {
-					m_ptr_geometry=dynamic_cast<CCLGeometry*>(new CCLSpline(geo->GetSpline()));
-					// add and look for the next geometry
-					m_ptrs_geometries.push_back(m_ptr_geometry);
-					continue;
+				if (pGeo->IsSpline())
+				{
+				    std::cerr << "pGeo->IsSpline()" << std::endl;
 				}
-				*/
 			}
 		}
 
 		FCDSceneNode* root = doc.GetVisualSceneRoot();
 
-		GroupNode::ptr g = GroupNode::create();
+		Ptr<GroupNode> g = GroupNode::create();
 		if( traverseSG(root, g) > 0)
 		{
 			for(size_t i = 0; i < g->getChildNodes().size(); i++)
@@ -417,7 +397,7 @@ public:
 			{
 				for(PRIM_INDICES::const_iterator piit = it->second.begin(); piit != it->second.end(); piit++)
 				{
-					Material::ptr pMat = Material::Blue();
+					Ptr<Material> pMat = Material::Blue();
 					pScene->insertNode( ShapeNode::create( pMat, Geometry::create(piit->first, m_pVB, piit->second) ) );
 				}
 			}
@@ -461,7 +441,7 @@ public:
 		return true;
 	}
 
-	virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		return false;
 	}

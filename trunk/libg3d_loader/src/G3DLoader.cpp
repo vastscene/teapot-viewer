@@ -19,7 +19,6 @@ using namespace eh;
 
 #include <iostream>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
 
@@ -213,12 +212,12 @@ public:
 		g3d_context_free(m_context);
 	}
 
-	SceneNode::ptr doObject(G3DObject* object, eh::IVertexBuffer::ptr pVB)
+	Ptr<SceneNode> doObject(G3DObject* object, eh::Ptr<IVertexBuffer> pVB)
 	{
 		if(object->hide)
 			return NULL;
 
-		Poly obj_normals;
+		std::vector<Vec3> obj_normals;
 
 		typedef boost::unordered_map<G3DMaterial*, Uint_vec> FaceMap;
 
@@ -311,18 +310,18 @@ public:
 			}
 		}
 
-		GroupNode::ptr pObject = GroupNode::create();
+		Ptr<GroupNode> pObject = GroupNode::create();
 
 		for(GSList* oit = object->objects; oit != NULL; oit = oit->next)
 			pObject->addChildNodes( doObject( (G3DObject*) oit->data, pVB ) );
 
 		if( faces.size() > 0 )
 		{
-			ShapeNode::ptr pShape = ShapeNode::create();
+			Ptr<ShapeNode> pShape = ShapeNode::create();
 
 			for(FaceMap::iterator it = faces.begin(); it != faces.end(); ++it)
 			{
-				eh::Material::ptr pMat = NULL;
+				Ptr<Material> pMat = NULL;
 
 				if(it->first)
 				{
@@ -330,10 +329,7 @@ public:
 					if(it->first->tex_image)
 						pMat->setTexture( SceneIO::createTexture(it->first->tex_image->name) );
 				}
-
-				eh::Geometry::ptr pGeo = eh::Geometry::create(eh::Geometry::TRIANGLES, pVB, it->second);
-
-				pShape->addGeometry(pMat, pGeo);
+				pShape->addGeometry(pMat, Geometry::create(eh::Geometry::TRIANGLES, pVB, it->second));
 			}
 
 			pObject->addChildNodes( pShape );
@@ -347,7 +343,7 @@ public:
 
 	}
 
-	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		if(m_context == NULL)
 			return false;
@@ -375,7 +371,7 @@ public:
 
 		if(model)
 		{
-			eh::IVertexBuffer::ptr pVB = eh::createVertexBuffer(sizeof(Vec3)*2 + sizeof(Float)*2);
+			eh::Ptr<IVertexBuffer> pVB = CreateVertexBuffer(sizeof(Vec3)*2 + sizeof(Float)*2);
 
 			Uint n = 0;
 			for(GSList* oit = model->objects; oit != NULL; oit = oit->next )
@@ -428,7 +424,7 @@ public:
 		return true;
 	}
 
-	virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		return false;
 	}

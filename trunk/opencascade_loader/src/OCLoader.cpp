@@ -19,7 +19,6 @@ using namespace eh;
 
 //#include <shlobj.h>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
@@ -96,13 +95,13 @@ using namespace eh;
 class OCLoader: public SceneIO::IPlugIn
 {
 private:
-	IVertexBuffer::ptr m_pVB;
+	Ptr<IVertexBuffer> m_pVB;
 
 	bool m_bCount;
 	float m_nCount;
 	float m_iCount;
 
-	Scene::ptr m_pScene;
+	Ptr<Scene> m_pScene;
 	SceneIO::progress_callback progress;
 
 	static const int HashUpper = INT_MAX;
@@ -110,10 +109,10 @@ private:
 	const double m_fDeflAngle;
 
 	boost::unordered_set<int> m_reffered_shapes;
-	boost::unordered_map<int, SceneNode::ptr > m_hashes;
+	boost::unordered_map<int, Ptr<SceneNode> > m_hashes;
 
-	SceneNode::ptr createShape(const TDF_Label& label);
-	SceneNode::ptr createShape(const TopoDS_Shape& aShape, const Handle_XCAFDoc_ColorTool& Colors);
+	Ptr<SceneNode> createShape(const TDF_Label& label);
+	Ptr<SceneNode> createShape(const TopoDS_Shape& aShape, const Handle_XCAFDoc_ColorTool& Colors);
 	bool makeFace(const TopoDS_Face& aFace, Uint_vec& indices);
 	bool makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices);
 
@@ -175,22 +174,22 @@ public:
 		return true;
 	}
 
-	virtual bool read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress);
-	virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress)
+	virtual bool read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress);
+	virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress)
 	{
 		return false;
 	}
 
 };
 
-bool OCLoader::read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress_callback)
+bool OCLoader::read(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress_callback)
 {
 	m_iCount = m_nCount = 0;
 	m_bCount = false;
 	progress = progress_callback;
 	m_pScene = pScene;
 
-	m_pVB = createVertexBuffer( sizeof(Vec3)*2 );
+	m_pVB = CreateVertexBuffer( sizeof(Vec3)*2 );
 	m_reffered_shapes.clear();
 	m_hashes.clear();
 
@@ -211,9 +210,9 @@ bool OCLoader::read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progr
 	Handle_Message_ProgressIndicator anIndicator = new MyProgressIndicator(progress);
 	anIndicator->NewScope (50, "Reading");
 
-	boost::filesystem::wpath file_path( sFile );
+	std::wstring sExt = SceneIO::File( sFile ).getExtension();
 
-	if( boost::iequals( file_path.extension(), L".stp" ) || boost::iequals( file_path.extension(), L".step" ) )
+	if( boost::iequals( sExt, L".stp" ) || boost::iequals( sExt, L".step" ) )
 	{
 		Handle_TDocStd_Document pDoc = new TDocStd_Document("STEP");
 
@@ -238,7 +237,7 @@ bool OCLoader::read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progr
 
 		return true;
 	}
-	else if(  boost::iequals( file_path.extension(), L".igs" ) || boost::iequals( file_path.extension(), L".iges" ))
+	else if(  boost::iequals( sExt, L".igs" ) || boost::iequals( sExt, L".iges" ))
 	{
 		Handle_TDocStd_Document pDoc = new TDocStd_Document("IGES");
 
@@ -251,7 +250,7 @@ bool OCLoader::read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progr
 
 		if (status != IFSelect_RetDone)
 			return false;
-	
+
 		aReader.WS()->MapReader()->SetProgress( anIndicator);
 
 		Standard_Boolean ret = aReader.Transfer( pDoc);
@@ -263,25 +262,30 @@ bool OCLoader::read(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progr
 
 		return true;
 	}
-	else if( boost::iequals( file_path.extension(), L".brep" ) )
+	else if( boost::iequals( sExt, L".brep" ) )
 	{
 		TopoDS_Shape aShape;
 		BRep_Builder aBuilder;
-		Standard_Boolean result = BRepTools::Read(aShape, 
+		Standard_Boolean result = BRepTools::Read(aShape,
 							  std::string(sFile.begin(), sFile.end()).c_str(),
 							  aBuilder, anIndicator);
 
-		m_bCount = true;
-		m_nCount = 0;
-		m_iCount = 0;
-		createShape(aShape, NULL);
+        if(result)
+        {
+            m_bCount = true;
+            m_nCount = 0;
+            m_iCount = 0;
+            createShape(aShape, NULL);
 
-		m_bCount = false;
+            m_bCount = false;
 
-		pScene->insertNode( createShape(aShape, NULL) );
+            pScene->insertNode( createShape(aShape, NULL) );
+
+            return true;
+        }
 	}
 
-	return true;
+	return false;
 }
 
 void OCLoader::proceedChilds(const TDF_Label& label)
@@ -309,7 +313,7 @@ void OCLoader::iterateChilds(const TDF_Label& label, Matrix tra /*= Matrix()*/, 
 
 		const TopLoc_Location& aLoc = aShape.Location();
 		gp_Trsf trs = aLoc.Transformation();
-		
+
 		Matrix m;
 
 		m[0] = (float)trs.Value(1,1);	m[4] = (float)trs.Value(1,2);	m[8]  = (float)trs.Value(1,3);	m[12] = (float)trs.Value(1,4);
@@ -329,9 +333,9 @@ void OCLoader::iterateChilds(const TDF_Label& label, Matrix tra /*= Matrix()*/, 
 		bName = true;
 	}
 
-	//TRACE(_T("\n%sL%X %s TL=%d A=%d S=%d Cd=%d SS=%d F=%d R=%d CT=%d Sub=%d"), 
-	//	tab, 
-	//	hash, 
+	//TRACE(_T("\n%sL%X %s TL=%d A=%d S=%d Cd=%d SS=%d F=%d R=%d CT=%d Sub=%d"),
+	//	tab,
+	//	hash,
 	//	name.ToExtString(),
 	//	aShapeTool->IsTopLevel(label),
 	//	aShapeTool->IsAssembly(label),
@@ -358,7 +362,7 @@ void OCLoader::iterateChilds(const TDF_Label& label, Matrix tra /*= Matrix()*/, 
 
 		if( aShapeTool->IsSimpleShape(label) && (bRef || aShapeTool->IsFree(label)))
 		{
-			if(SceneNode::ptr pShape = createShape( label ))
+			if(Ptr<SceneNode> pShape = createShape( label ))
 			{
 				m_pScene->insertNode( GroupNode::create( pShape, tra ) );
 			}
@@ -373,7 +377,7 @@ void OCLoader::iterateChilds(const TDF_Label& label, Matrix tra /*= Matrix()*/, 
 	}
 }
 
-SceneNode::ptr OCLoader::createShape(const TDF_Label& label)
+Ptr<SceneNode> OCLoader::createShape(const TDF_Label& label)
 {
 	Handle_XCAFDoc_ShapeTool aAssembly = XCAFDoc_DocumentTool::ShapeTool(label);
 	const TopoDS_Shape& aShape = aAssembly->GetShape(label);
@@ -381,7 +385,7 @@ SceneNode::ptr OCLoader::createShape(const TDF_Label& label)
 	return createShape( aShape, Colors );
 	return NULL;
 }
-SceneNode::ptr OCLoader::createShape(const TopoDS_Shape& aShape, const Handle_XCAFDoc_ColorTool& Colors)
+Ptr<SceneNode> OCLoader::createShape(const TopoDS_Shape& aShape, const Handle_XCAFDoc_ColorTool& Colors)
 {
 	int hash = aShape.HashCode(HashUpper);
 
@@ -391,26 +395,26 @@ SceneNode::ptr OCLoader::createShape(const TopoDS_Shape& aShape, const Handle_XC
 	RGBA color = RGBA(0.7f,0.7f,0.7f);
 
 	Quantity_Color aColor;
-	if( !Colors.IsNull() && Colors->GetColor( aShape, XCAFDoc_ColorSurf, aColor) ) 
+	if( !Colors.IsNull() && Colors->GetColor( aShape, XCAFDoc_ColorSurf, aColor) )
 	{
 		color = RGBA((Float)aColor.Red(), (Float)aColor.Green(), (Float)aColor.Blue());
 	}
 
 
-	ShapeNode::ptr shape = ShapeNode::create();
+	Ptr<ShapeNode> shape = ShapeNode::create();
 
 	boost::unordered_map< RGBA, Uint_vec > faces;
 	Uint_vec edges;
 
-	for (TopExp_Explorer anFaceExp(aShape, TopAbs_FACE); anFaceExp.More(); anFaceExp.Next()) 
+	for (TopExp_Explorer anFaceExp(aShape, TopAbs_FACE); anFaceExp.More(); anFaceExp.Next())
 	{
 		const TopoDS_Shape& bShape = anFaceExp.Current();
 		const TopoDS_Face& aFace = TopoDS::Face(bShape);
 
-		if(!Colors.IsNull() && Colors->GetColor( aFace, XCAFDoc_ColorSurf, aColor) ) 
+		if(!Colors.IsNull() && Colors->GetColor( aFace, XCAFDoc_ColorSurf, aColor) )
 			color = RGBA((Float)aColor.Red(), (Float)aColor.Green(), (Float)aColor.Blue());
 
-		if (aFace.IsNull() == Standard_False) 
+		if (aFace.IsNull() == Standard_False)
 			 makeFace(aFace, faces[color] );
 	}
 
@@ -419,14 +423,14 @@ SceneNode::ptr OCLoader::createShape(const TopoDS_Shape& aShape, const Handle_XC
 		if(it->second.size() > 0)
 			shape->addGeometry( Material::create( it->first ), Geometry::create(Geometry::TRIANGLES, m_pVB, it->second) );
 	}
-	
-	for (TopExp_Explorer anEdgeExp (aShape, TopAbs_EDGE); anEdgeExp.More(); anEdgeExp.Next()) 
+
+	for (TopExp_Explorer anEdgeExp (aShape, TopAbs_EDGE); anEdgeExp.More(); anEdgeExp.Next())
 	{
 		const TopoDS_Shape& aShape = anEdgeExp.Current();
-		
+
 		const TopoDS_Edge& aEdge = TopoDS::Edge (aShape);
 
-		if (aEdge.IsNull() == Standard_False) 
+		if (aEdge.IsNull() == Standard_False)
 			makeEdge(aEdge, edges);
 	}
 
@@ -439,10 +443,10 @@ SceneNode::ptr OCLoader::createShape(const TopoDS_Shape& aShape, const Handle_XC
 		return m_hashes[hash] = shape;
 }
 
-template<class T> 
+template<class T>
 Vec3 to_Vector3D(const T& t)
-{ 
-	return Vec3((Float)t.X(), (Float)t.Y(), (Float)t.Z()); 
+{
+	return Vec3((Float)t.X(), (Float)t.Y(), (Float)t.Z());
 }
 
 bool OCLoader::makeFace(const TopoDS_Face& aFace, Uint_vec& indices)
@@ -451,7 +455,7 @@ bool OCLoader::makeFace(const TopoDS_Face& aFace, Uint_vec& indices)
 	{
 		m_nCount += 1;
 		return NULL;
-	}	
+	}
 	else
 	{
 		m_iCount += 1;
@@ -461,7 +465,7 @@ bool OCLoader::makeFace(const TopoDS_Face& aFace, Uint_vec& indices)
 	TopLoc_Location aLoc;
 	Handle(Poly_Triangulation) aTri = BRep_Tool::Triangulation (aFace, aLoc);
 
-	if( aTri.IsNull() || aTri->Deflection() > m_fDeflection+ Precision::Confusion() ) 
+	if( aTri.IsNull() || aTri->Deflection() > m_fDeflection+ Precision::Confusion() )
 	{
 		// Triangulate the face by the standard OCC mesher
 		BRepMesh_IncrementalMesh IM(aFace, m_fDeflection, Standard_False, m_fDeflAngle);
@@ -473,9 +477,9 @@ bool OCLoader::makeFace(const TopoDS_Face& aFace, Uint_vec& indices)
 
 	aTri = BRep_Tool::Triangulation(aFace, aLoc);
 
-	if (aTri.IsNull() == Standard_False) 
+	if (aTri.IsNull() == Standard_False)
 	{
-		const Standard_Integer nNodes(aTri->NbNodes());
+//		const Standard_Integer nNodes(aTri->NbNodes());
 		const Standard_Integer nTriangles(aTri->NbTriangles());
 		const TColgp_Array1OfPnt&    arrPolyNodes = aTri->Nodes();
 		const Poly_Array1OfTriangle& arrTriangles = aTri->Triangles();
@@ -523,7 +527,7 @@ bool OCLoader::makeFace(const TopoDS_Face& aFace, Uint_vec& indices)
 
 		return true;
 	}
-	
+
 	return false;
 
 
@@ -534,7 +538,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 	{
 		m_nCount += 1;
 		return false;
-	}	
+	}
 	else
 	{
 		m_iCount += 1;
@@ -551,7 +555,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 	else if (aPol->Deflection() > m_fDeflection + Precision::Confusion() && BRep_Tool::IsGeometric(aEdge))
 		isTessellate = Standard_True;
 
-	if (isTessellate && BRep_Tool::IsGeometric(aEdge)) 
+	if (isTessellate && BRep_Tool::IsGeometric(aEdge))
 	{
 		//try to find PolygonOnTriangulation
 		Handle(Poly_PolygonOnTriangulation) aPT;
@@ -559,20 +563,20 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 		TopLoc_Location aL;
 
 		Standard_Boolean found = Standard_False;
-		for(int i = 1; Standard_True; i++) 
+		for(int i = 1; Standard_True; i++)
 		{
 			BRep_Tool::PolygonOnTriangulation(aEdge, aPT, aT, aL, i);
 
 			if(aPT.IsNull() || aT.IsNull()) break;
 
-			if(aPT->Deflection() <= m_fDeflection + Precision::Confusion() && aPT->HasParameters()) 
+			if(aPT->Deflection() <= m_fDeflection + Precision::Confusion() && aPT->HasParameters())
 			{
 				found = Standard_True;
 				break;
 			}
 		}
 
-		if(found) 
+		if(found)
 		{
 
 			BRepAdaptor_Curve aCurve(aEdge);
@@ -581,7 +585,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 			TColgp_Array1OfPnt arrNodes(1, nbNodes);
 			TColStd_Array1OfReal arrUVNodes(1, nbNodes);
 
-			for(int i = 1; i <= nbNodes; i++) 
+			for(int i = 1; i <= nbNodes; i++)
 			{
 				arrUVNodes(i) = aPrs->Value(aPrs->Lower() + i - 1);
 				arrNodes(i) = aCurve.Value(arrUVNodes(i));
@@ -591,7 +595,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 		}
 		else
 		{
-		        
+
 			BRepAdaptor_Curve aCurve(aEdge);
 			const Standard_Real aFirst = aCurve.FirstParameter();
 			const Standard_Real aLast  = aCurve.LastParameter();
@@ -601,7 +605,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 
 			TColgp_Array1OfPnt arrNodes(1, nbNodes);
 			TColStd_Array1OfReal arrUVNodes(1, nbNodes);
-			for (int i = 1; i <= nbNodes; i++) 
+			for (int i = 1; i <= nbNodes; i++)
 			{
 				arrNodes(i) = TD.Value(i);
 				arrUVNodes(i) = TD.Parameter(i);
@@ -613,7 +617,7 @@ bool OCLoader::makeEdge(const TopoDS_Edge& aEdge, Uint_vec& indices)
 		BRep_Builder aBld;
 		aBld.UpdateEdge (aEdge, aPol);
 	}
-		
+
 
 	const Standard_Integer nNodes (aPol->NbNodes());
 	const TColgp_Array1OfPnt& arrPolyNodes = aPol->Nodes();

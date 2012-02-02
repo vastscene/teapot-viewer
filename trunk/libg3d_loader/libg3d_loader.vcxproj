@@ -1,0 +1,261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6F7E410A-2CA6-4F62-9FEF-AB7F280B47EF}</ProjectGuid>
+    <RootNamespace>g3d</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\default.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\default.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>libg3d-0.0.8\include;glib-dev_2.22.4-1_win32\lib\glib-2.0\include;glib-dev_2.22.4-1_win32\include\glib-2.0;libgsf-1.14.7\gsf;libgsf-1.14.7;libxml2-2.7.7\include;libiconv-1.9.2-1-lib\include;libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src;libintl-0.14.4-lib\include;..\zlib-1.2.4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>IN_LIBINTL;HAVE_CONFIG_H;HAVE_GETCWD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glib-2.0.lib;gmodule-2.0.lib;gobject-2.0.lib;libxml2.lib;libiconv.lib;..\zlib-1.2.4\projects\visualc6\Win32_DLL_Release\zlib1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>glib-dev_2.22.4-1_win32\lib;zlib-1.2.3.win32\lib;libxml2-2.7.7\win32\bin.msvc;libiconv-1.9.2-1-lib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>g3d.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>libg3d-0.0.8\include;glib-dev_2.22.4-1_win32\lib\glib-2.0\include;glib-dev_2.22.4-1_win32\include\glib-2.0;libgsf-1.14.7\gsf;libgsf-1.14.7;libxml2-2.7.7\include;libiconv-1.9.2-1-lib\include;libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src;libintl-0.14.4-lib\include;..\zlib-1.2.4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>IN_LIBINTL;HAVE_CONFIG_H;HAVE_GETCWD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glib-2.0.lib;gmodule-2.0.lib;gobject-2.0.lib;libxml2.lib;libiconv.lib;..\zlib-1.2.4\projects\visualc6\Win32_DLL_Release\zlib1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>glib-dev_2.22.4-1_win32\lib;zlib-1.2.3.win32\lib;libxml2-2.7.7\win32\bin.msvc;libiconv-1.9.2-1-lib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>g3d.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="g3d.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\G3DLoader.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="libg3d-0.0.8\src\context.c" />
+    <ClCompile Include="libg3d-0.0.8\src\face.c" />
+    <ClCompile Include="libg3d-0.0.8\src\iff.c" />
+    <ClCompile Include="libg3d-0.0.8\src\material.c" />
+    <ClCompile Include="libg3d-0.0.8\src\matrix.c" />
+    <ClCompile Include="libg3d-0.0.8\src\model.c" />
+    <ClCompile Include="libg3d-0.0.8\src\object.c" />
+    <ClCompile Include="libg3d-0.0.8\src\plugins.c" />
+    <ClCompile Include="libg3d-0.0.8\src\primitive.c" />
+    <ClCompile Include="libg3d-0.0.8\src\quat.c" />
+    <ClCompile Include="libg3d-0.0.8\src\read.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_buffer.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_file.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_gsf.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_gsf_class.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_read.c" />
+    <ClCompile Include="libg3d-0.0.8\src\stream_zlib.c" />
+    <ClCompile Include="libg3d-0.0.8\src\texture.c" />
+    <ClCompile Include="libg3d-0.0.8\src\vector.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-blob.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-clip-data.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-doc-meta-data.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-docprop-vector.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-msole.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-msvba.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-stdio.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile-zip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-infile.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-bzip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-gzip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-http.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-iochannel.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-memory.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-proxy.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-stdio.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input-textline.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-input.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-libxml.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-msole-utils.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-open-pkg-utils.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-opendoc-utils.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-msole.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-stdio.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile-zip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-outfile.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-bzip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-csv.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-gzip.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-iconv.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-iochannel.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-memory.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output-stdio.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-output.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-shared-memory.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-structured-blob.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-timestamp.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-utils.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\gsf-zip-utils.c" />
+    <ClCompile Include="libgsf-1.14.7\gsf\version.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\bindtextdom.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcgettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcigettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dcngettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dgettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\dngettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\explodename.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\finddomain.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\intl-compat.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\l10nflist.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\langprefs.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\loadmsgcat.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localcharset.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localealias.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localename.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\log.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\ngettext.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\osdep.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural-exp.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-args.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-parse.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\relocatable.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\textdomain.c" />
+    <ClCompile Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnprintf.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-blob.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-clip-data.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-doc-meta-data.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-docprop-vector.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-impl-utils.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-msole.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-msvba.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-stdio.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile-zip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-infile.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-bzip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-gzip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-http.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-iochannel.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-memory.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-proxy.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-stdio.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input-textline.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-input.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-libxml.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-meta-names.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-msole-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-msole-utils.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-open-pkg-utils.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-opendoc-utils.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-msole.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-stdio.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile-zip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-outfile.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-bzip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-csv.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-gzip.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-iconv.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-iochannel.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-memory.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output-stdio.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-output.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-shared-memory.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-structured-blob.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-timestamp.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-utils.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf-zip-impl.h" />
+    <ClInclude Include="libgsf-1.14.7\gsf\gsf.h" />
+    <ClInclude Include="libg3d-0.0.8\src\stream_gsf_class.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\config.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\eval-plural.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gettextP.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\gmo.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\hash-string.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\libgnuintl.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\libintl.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\loadinfo.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\localcharset.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\plural-exp.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-args.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\printf-parse.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\relocatable.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnprintf.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\vasnwprintf.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\wprintf-parse.h" />
+    <ClInclude Include="libintl-0.14.4-lib\src\libintl\0.14.4\libintl-0.14.4-src\xsize.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SceneGraph\SceneGraph.vcxproj">
+      <Project>{b4cb9486-fdb1-4098-8a07-db5aaaff9241}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

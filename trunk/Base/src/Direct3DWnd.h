@@ -28,8 +28,8 @@ public:
 	{
 		HMODULE hModule = LoadLibraryA("Direct3D9Driver.dll");
 		assert(hModule);
-		CreateDirec3D9Driver = (CreateDriverFunc)GetProcAddress(hModule, "createDirect3D9Driver");
-		if(IDriver::ptr pDriver = CreateDirec3D9Driver( (int*)this->GetHWND() ) )
+		CreateDirec3D9Driver = (CreateDriverFunc)GetProcAddress(hModule, "CreateDirect3D9Driver");
+		if( Ptr<IDriver> pDriver = CreateDirec3D9Driver( (int*)this->GetHWND() ) )
 		{
 			GetViewport().setDriver( pDriver );
 			GetViewport().setDisplayRect(GetClientRect().x,GetClientRect().y, GetClientRect().width, GetClientRect().height);		

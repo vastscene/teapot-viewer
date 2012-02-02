@@ -21,7 +21,6 @@
 #include <vector>
 #include <string>
 #include <boost/function.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include "Scene.h"
 
@@ -43,6 +42,7 @@ namespace eh
 			File(const std::string& file);
             ~File();
 
+			const std::wstring  getExtension() const;
             const std::wstring  getName() const;
             const std::wstring& getPath() const
             {
@@ -64,8 +64,8 @@ namespace eh
             virtual bool canWrite(Uint i) const = 0;
             virtual bool canRead(Uint i) const = 0;
 
-            virtual bool read(const std::wstring& aFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
-            virtual bool write(const std::wstring& sFile, Scene::ptr pScene, SceneIO::progress_callback& progress) = 0;
+            virtual bool read(const std::wstring& aFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress) = 0;
+            virtual bool write(const std::wstring& sFile, Ptr<Scene> pScene, SceneIO::progress_callback& progress) = 0;
         };
 
         SceneIO();
@@ -74,16 +74,16 @@ namespace eh
         static void setSetStatusTextCallback(status_callback);
         static void setStatusText(const std::wstring& text);
 
-		static Texture::ptr createTexture(const std::wstring& text);
-		static Texture::ptr createTexture(const std::string& text);
+		static Ptr<Texture> createTexture(const std::wstring& text);
+		static Ptr<Texture> createTexture(const std::string& text);
 
         std::wstring getAboutString() const;
         std::wstring getFileWildcards(bool bLoading = true) const;
 
-        bool read(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress = NULL) const;
-        bool write(const std::wstring& sFile, Scene::ptr pScene, progress_callback progress = NULL) const;
+        bool read(const std::wstring& sFile, Ptr<Scene> pScene, progress_callback progress = NULL) const;
+        bool write(const std::wstring& sFile, Ptr<Scene> pScene, progress_callback progress = NULL) const;
     private:
-        bool execute(const std::wstring& file, Scene::ptr pScene, progress_callback progress, bool bLoading ) const;
+        bool execute(const std::wstring& file, Ptr<Scene> pScene, progress_callback progress, bool bLoading ) const;
 
         struct Impl;
         Impl* m_pImpl;
