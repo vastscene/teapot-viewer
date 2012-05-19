@@ -18,6 +18,9 @@
     <ClCompile Include="src\Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WebUpdate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Base3DWnd.h">
