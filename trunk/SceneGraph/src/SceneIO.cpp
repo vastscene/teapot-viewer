@@ -43,9 +43,9 @@ namespace eh
 	static std::wstring s_abs_path(const boost::filesystem::wpath& file)
 	{
 		if(!file.is_complete())
-			return (s_path / file).string();
+			return (s_path / file).wstring();
 		else
-			return file.string();
+			return file.wstring();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -68,12 +68,12 @@ namespace eh
 
 	const std::wstring SceneIO::File::getExtension() const
 	{
-		return boost::filesystem::wpath(m_path).extension();
+		return boost::filesystem::wpath(m_path).extension().wstring();
 	}
 
 	const std::wstring SceneIO::File::getName() const
 	{
-		return boost::filesystem::wpath(m_path).leaf();
+		return boost::filesystem::wpath(m_path).leaf().wstring();
 	}
 
 	size_t SceneIO::File::getContent(std::auto_ptr<char>& data) const
@@ -113,7 +113,7 @@ namespace eh
 
 			size_t ret = 0;
 
-			if( unzFile zipfile = unzOpen64( std::string(archive.string().begin(), archive.string().end()).c_str()) )
+			if( unzFile zipfile = unzOpen64( archive.string().c_str()) )
 			{
 				for(int s = unzGoToFirstFile(zipfile); s != UNZ_END_OF_LIST_OF_FILE; s = unzGoToNextFile(zipfile))
 				{
@@ -182,27 +182,27 @@ namespace eh
 	{
 		boost::filesystem::wpath path = boost::filesystem::initial_path<boost::filesystem::wpath>();
 
-		for (boost::filesystem::wdirectory_iterator it(path), end; it != end; ++it)
+		for (boost::filesystem::directory_iterator it(path), end; it != end; ++it)
 		{
 			if ( boost::filesystem::is_directory(it->status()) )
 				continue;
 
-			boost::filesystem::wpath file = it->leaf();
+			boost::filesystem::wpath file = *it;
 
-			if( !boost::iequals( file.extension(), L".dll" ) && !boost::iequals( file.extension(), L".so" ) )
+			if( !boost::iequals( file.extension().wstring(), L".dll" ) && !boost::iequals( file.extension().wstring(), L".so" ) )
 				continue;
 
-			setStatusText( std::wstring(L"Loading PlugIn: ") + file.string() + L"..." );
+			setStatusText( std::wstring(L"Loading PlugIn: ") + file.wstring() + L"..." );
 
 #if defined(_MSC_VER)
 
-			std::wstring rpath = file.string();
+			std::wstring rpath = file.wstring();
 			boost::algorithm::replace_all(rpath, L"/", L"\\");
 			boost::algorithm::replace_all(rpath, L".dll", L"");
 			if ( boost::filesystem::is_directory(rpath) )
 				SetDllDirectoryW( rpath.c_str() );
 
-			std::wstring dll = file.string();
+			std::wstring dll = file.wstring();
 			boost::algorithm::replace_all(dll, L"/", L"\\");
 			HMODULE hModule = LoadLibraryW(dll.c_str() );
 #else
@@ -352,7 +352,7 @@ namespace eh
 		{
 			boost::filesystem::wpath sFile = boost::filesystem::system_complete( file );
 
-			std::wstring ext = sFile.extension();
+			std::wstring ext = sFile.extension().wstring();
 			boost::algorithm::to_lower(ext);
 
 			if( m_pImpl->m_ext_plugin_map.find(ext) != m_pImpl->m_ext_plugin_map.end() )
@@ -363,14 +363,14 @@ namespace eh
 				{
 		    		s_set_path( sFile );
 
-					if(plugin->read( sFile.string(), pScene, progress) == false)
+					if(plugin->read( sFile.wstring(), pScene, progress) == false)
 						throw -1;
 					else
 						ret = true;
 				}
 				else
 				{
-				   	if(plugin->write( sFile.string(), pScene, progress) == false)
+				   	if(plugin->write( sFile.wstring(), pScene, progress) == false)
 						throw -1;
 					else
 						ret = true;
@@ -378,8 +378,7 @@ namespace eh
 			}
 			else
 			{
-				std::string sfile(sFile.string().begin(), sFile.string().end());
-				if( unzFile zipfile = unzOpen(sfile.c_str()) )
+				if( unzFile zipfile = unzOpen(sFile.string().c_str()) )
 				{
 					for(int s = unzGoToFirstFile(zipfile); s != UNZ_END_OF_LIST_OF_FILE; s = unzGoToNextFile(zipfile))
 					{
@@ -389,7 +388,7 @@ namespace eh
 
 						std::string sName2(sName);
 						boost::filesystem::wpath sFile2(sName2.begin(), sName2.end());
-						std::wstring ext = sFile2.extension();
+						std::wstring ext = sFile2.extension().wstring();
 						boost::algorithm::to_lower(ext);
 
 						if( m_pImpl->m_ext_plugin_map.find(ext) != m_pImpl->m_ext_plugin_map.end() )
@@ -400,7 +399,7 @@ namespace eh
 
 				    		s_set_path( path );
 
-							if(plugin->read( path.string(), pScene, progress) == false)
+							if(plugin->read( path.wstring(), pScene, progress) == false)
 								ret = false;
 							else
 								ret = true;
