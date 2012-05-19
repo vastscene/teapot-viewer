@@ -25,7 +25,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader.fx">
+    <FxCompile Include="shader.fx">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader.cso">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
