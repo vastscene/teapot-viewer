@@ -97,7 +97,7 @@ public:
 			return NULL;
 
 		Ptr<Direct3D9VertexBuffer> ret = pBuff->m_resource;
-		
+
 		if( ret )
 			return ret;
 
@@ -116,11 +116,11 @@ public:
 		IDirect3DVertexBuffer9* pVB = NULL;
 
 		HRESULT hr = m_pDevice->CreateVertexBuffer(pBuff->getBufferSize(), 
-							 D3DUSAGE_WRITEONLY, 
-							 FVF, 
-							 D3DPOOL_MANAGED,
-							 &pVB, 
-							 NULL);
+			D3DUSAGE_WRITEONLY, 
+			FVF, 
+			D3DPOOL_MANAGED,
+			&pVB, 
+			NULL);
 
 		if( SUCCEEDED(hr) && pVB)
 		{
@@ -128,7 +128,7 @@ public:
 			if( SUCCEEDED( pVB->Lock(0, pBuff->getBufferSize(), &vData, 0) ))
 			{
 				memcpy(vData, pBuff->getBuffer(), pBuff->getBufferSize());
-				
+
 				// Hier wird die Texture Y Koordinate umgerechnet ...
 				if(stride == sizeof(Vec3)*2+sizeof(Float)*2)
 				{
@@ -156,7 +156,7 @@ public:
 	bool bind(IDirect3DDevice9* m_pDevice)
 	{
 		return SUCCEEDED(m_pDevice->SetFVF( m_FVF )) &&
-		       SUCCEEDED(m_pDevice->SetStreamSource( 0, m_pVB, 0, m_stride ));
+			SUCCEEDED(m_pDevice->SetStreamSource( 0, m_pVB, 0, m_stride ));
 	}
 
 	UINT getSize() const
@@ -198,11 +198,11 @@ public:
 			IDirect3DIndexBuffer9* pIB = NULL;
 
 			HRESULT hr = m_pDevice->CreateIndexBuffer(  sizeof(indices[0])*(UINT)indices.size(), 
-								 D3DUSAGE_WRITEONLY, 
-								 D3DFMT_INDEX32, 
-								 D3DPOOL_MANAGED, 
-								 &pIB, 
-								 NULL);
+				D3DUSAGE_WRITEONLY, 
+				D3DFMT_INDEX32, 
+				D3DPOOL_MANAGED, 
+				&pIB, 
+				NULL);
 
 			if( SUCCEEDED(hr) && pIB)
 			{
@@ -259,12 +259,12 @@ class Direct3D9Texture: public IResource
 public:
 	static Ptr<Direct3D9Texture> create(IDirect3DDevice9* m_pDevice, const std::wstring& sFile)
 	{
-        SceneIO::File aFile(sFile);
+		SceneIO::File aFile(sFile);
 		SceneIO::setStatusText( std::wstring(L"Laoding ") + aFile.getName() + L"...");
 
 		std::auto_ptr<char> data;
 		size_t size = aFile.getContent(data);
-		
+
 		if( size == 0 )
 		{
 			std::wcerr << aFile.getPath().c_str() << " SceneIO::File::getContent(data.get()) failed" << std::endl;
@@ -285,7 +285,7 @@ public:
 	{
 		return m_pTexture;
 	}
-	
+
 	virtual ~Direct3D9Texture()
 	{
 		SAFE_RELEASE(m_pTexture);
@@ -353,7 +353,7 @@ public:
 						&this->present.MultiSampleType, 
 						&this->present.MultiSampleQuality))
 						break;
-				
+
 				this->present.BackBufferFormat		= mode.Format;
 
 				this->present.BackBufferWidth		= nFrameBufferWidth  = mode.Width;
@@ -379,9 +379,9 @@ public:
 						flags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 
 					hr = d3d9->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
-							flags| D3DCREATE_FPU_PRESERVE, 
-							&this->present, &this->m_pDevice);
-					
+						flags| D3DCREATE_FPU_PRESERVE, 
+						&this->present, &this->m_pDevice);
+
 					if( FAILED( hr ) ) 
 					{
 						SAFE_RELEASE(m_pDevice);
@@ -390,7 +390,7 @@ public:
 					}
 
 					hr = D3DXCreateFontW( this->m_pDevice, 16, 0, FW_NORMAL, 1, FALSE, DEFAULT_CHARSET,
-							     OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial", &this->m_pFont );
+						OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial", &this->m_pFont );
 
 					this->m_pDevice->SetRenderState( D3DRS_MULTISAMPLEANTIALIAS, TRUE );
 
@@ -401,7 +401,7 @@ public:
 					this->m_pDevice->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 
 					loadShader();
-					
+
 					this->m_pDevice->SetRenderState( D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 					this->m_pDevice->SetRenderState( D3DRS_LIGHTING, TRUE );
 					this->m_pDevice->SetRenderState( D3DRS_NORMALIZENORMALS, TRUE );
@@ -412,7 +412,7 @@ public:
 
 
 				}
-				
+
 				RECT r; 
 				if(GetWindowRect(hWnd, &r))
 				{
@@ -428,7 +428,7 @@ public:
 
 				hr = this->m_pDevice->CreateAdditionalSwapChain(&this->present, &this->pSwapChain);
 			}
-			
+
 			SAFE_RELEASE(d3d9); // done with d3d9 object
 
 		}
@@ -451,53 +451,21 @@ public:
 	{
 		if( caps.VertexShaderVersion >= D3DVS_VERSION(1,1) )
 		{
-			TCHAR sFilename[_MAX_PATH +1];
-			GetModuleFileName(NULL, sFilename, _MAX_PATH);
-
-			std::wstring fx(sFilename);
-			fx = SceneIO::File(fx).getPath() + L"shader.fx";
-
-			boost::filesystem::ifstream f(fx, std::ios::in);
-
 			LPD3DXBUFFER pBufferErrors = NULL;
 
 			ID3DXEffect* pShader = NULL;
 
-			if( f.is_open() )
-			{
-				f.seekg (0, std::ios::end);
-				long length = (long)f.tellg();
-				f.seekg (0, std::ios::beg);
-
-				char *buffer = new char [length];
-				f.read (buffer,length);
-
-				hr = D3DXCreateEffect(this->m_pDevice, 
-							 buffer,
-							 length,
-							 NULL,
-							 NULL,
-							 0, //D3DXFX_NOT_CLONEABLE,
-							 NULL,
-							 &pShader ,
-							 &pBufferErrors);
-
-				delete buffer;
-			}
-			else
-			{
-				HMODULE hModule = GetModuleHandleW(L"DIRECT3D9DRIVER.DLL");
-				assert(hModule);
-				hr = D3DXCreateEffectFromResourceW(this->m_pDevice, 
-							 hModule,
-							 L"RC_SHADER",
-							 NULL,
-							 NULL,
-							 0, //D3DXFX_NOT_CLONEABLE,
-							 NULL,
-							 &pShader,
-							 &pBufferErrors);
-			}
+			HMODULE hModule = GetModuleHandleW(L"DIRECT3D9DRIVER.DLL");
+			assert(hModule);
+			hr = D3DXCreateEffectFromResourceW(this->m_pDevice, 
+				hModule,
+				L"RC_SHADER",
+				NULL,
+				NULL,
+				0, //D3DXFX_NOT_CLONEABLE,
+				NULL,
+				&pShader,
+				&pBufferErrors);
 
 			if( FAILED( hr ))
 			{
@@ -513,7 +481,7 @@ public:
 		}	
 		return true;
 	}
-	
+
 	inline bool verifyNoErrors() const
 	{
 		if(this->m_pDevice && this->m_pFont && this->pSwapChain /*&& this->m_pShader*/ )
@@ -525,16 +493,16 @@ public:
 	}
 
 	bool isMultiSampleSupported(int nSamples, 
-				    DWORD nMaxQuality,
-				    IDirect3D9* d3d9, 
-				    D3DMULTISAMPLE_TYPE* pType, 
-				    DWORD* pMultiSampleQuality)
+		DWORD nMaxQuality,
+		IDirect3D9* d3d9, 
+		D3DMULTISAMPLE_TYPE* pType, 
+		DWORD* pMultiSampleQuality)
 	{
 		switch(nSamples)
 		{
 		default:
 			*pType = D3DMULTISAMPLE_NONE;	   break;
-		//case 1: *pType = D3DMULTISAMPLE_NONMASKABLE; break;
+			//case 1: *pType = D3DMULTISAMPLE_NONMASKABLE; break;
 		case 2: *pType = D3DMULTISAMPLE_2_SAMPLES; break;
 		case 3: *pType = D3DMULTISAMPLE_3_SAMPLES; break;
 		case 4: *pType = D3DMULTISAMPLE_4_SAMPLES; break;
@@ -557,8 +525,8 @@ public:
 		DWORD dwQuality = 0;
 
 		if( SUCCEEDED(d3d9->CheckDeviceMultiSampleType( D3DADAPTER_DEFAULT, 
-						D3DDEVTYPE_HAL, D3DFMT_D24S8, TRUE, 
-						*pType, &dwQuality ) ) )
+			D3DDEVTYPE_HAL, D3DFMT_D24S8, TRUE, 
+			*pType, &dwQuality ) ) )
 		{
 			if(dwQuality <= nMaxQuality)
 				*pMultiSampleQuality = dwQuality-1;
@@ -589,7 +557,7 @@ public:
 		int Build = LOWORD(this->adapter.DriverVersion.LowPart);
 
 		std::stringstream str;
-		
+
 		str << "Description: "  << (const char*)this->adapter.Description << std::endl;
 		str << "Driver: "	<< (const char*)this->adapter.Driver << std::endl;
 		str << "Version: "	<< Product << "." << Version << "." << SubVersion << "." << Build << std::endl;
@@ -628,8 +596,8 @@ public:
 			std::wcerr << L"IDirect3DDevice9::beginScene failed. Reason: " << DXGetErrorStringW(hr) << std::endl;
 
 		hr = this->m_pDevice->Clear( 0L, NULL, 
-					 D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 
-					 D3DCOLOR_RGBA(0xFF,0xFF,0xFF,0), 1.0f, 0 );
+			D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 
+			D3DCOLOR_RGBA(0xFF,0xFF,0xFF,0), 1.0f, 0 );
 
 		if(FAILED(hr))
 			std::wcerr << L"IDirect3DDevice9::beginScene failed. Reason: " << DXGetErrorStringW(hr) << std::endl;
@@ -638,7 +606,7 @@ public:
 
 		if(FAILED(hr))
 			std::wcerr << L"IDirect3DDevice9::beginScene failed. Reason: " << DXGetErrorStringW(hr) << std::endl;
-		
+
 		if(this->m_pShader)
 		{	
 			this->m_pShader->Begin( &this->cEffectPasses, 0 );
@@ -660,7 +628,7 @@ public:
 				FLOAT disable[] = { -1.f, -1.f, -1.f, -1.f };
 
 				this->m_pShader->SetFloatArray( "rgbaColor", disable, 4 );
-		
+
 				this->m_pShader->BeginPass( 0 );
 
 				this->m_pDevice->SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE);
@@ -700,12 +668,12 @@ public:
 
 		std::wostringstream str;
 		str << L" fps: " << s_fps.getFPS();
-//		str << " mc: " << s_mat_changes;
-//		str << " bc: " << s_buf_changes;
-//		str << " vbc: " << s_vbc;
-//		str << " ibc: " << s_ibc;
-//		str << " VBcount: " << IVertexBuffer::m_nCount;
-//		str << " RessMemSize: " << getResourceMemorySize()/1024 << " KB";
+		//		str << " mc: " << s_mat_changes;
+		//		str << " bc: " << s_buf_changes;
+		//		str << " vbc: " << s_vbc;
+		//		str << " ibc: " << s_ibc;
+		//		str << " VBcount: " << IVertexBuffer::m_nCount;
+		//		str << " RessMemSize: " << getResourceMemorySize()/1024 << " KB";
 
 		if(bShowFPS)
 			SceneIO::setStatusText(str.str());//, (int)this->getViewport().Width()-80, 10);
@@ -744,7 +712,7 @@ public:
 			std::wcerr << L"SetViewport failed." << std::endl;
 
 		if( this->present.BackBufferWidth != viewport.Width ||
-		    this->present.BackBufferHeight != viewport.Height )
+			this->present.BackBufferHeight != viewport.Height )
 		{
 			this->present.BackBufferWidth  = viewport.Width;
 			this->present.BackBufferHeight = viewport.Height;
@@ -752,7 +720,7 @@ public:
 			SAFE_RELEASE(this->pSwapChain);
 
 			HRESULT hr = this->m_pDevice->CreateAdditionalSwapChain(&this->present, &this->pSwapChain);
-			
+
 			if(FAILED(hr))
 				std::wcerr << L"IDirect3DDevice9::CreateAdditionalSwapChain failed. Reason: " << DXGetErrorStringW(hr) << std::endl;
 		}
@@ -802,7 +770,7 @@ public:
 
 			Matrix view(false);  
 			this->m_pShader->GetMatrix("matView",reinterpret_cast<D3DXMATRIX*>(&view));
-	
+
 			this->m_pShader->SetMatrix( "matWorld", reinterpret_cast<const D3DXMATRIX*>(&mat) );
 			this->m_pShader->SetMatrix( "matWorldViewProj", &reinterpret_cast<D3DXMATRIX&>(mat * view * proj) );
 
@@ -988,12 +956,12 @@ public:
 				if(node.getIndices().size()==0)
 				{
 					this->m_pDevice->DrawPrimitive( mode, 0, nPrimitives );
-//					this->m_pDevice->DrawPrimitiveUP( mode, nPrimitives, node.getVertexBuffer()->getBuffer(), node.getVertexBuffer()->getStride() );
+					//					this->m_pDevice->DrawPrimitiveUP( mode, nPrimitives, node.getVertexBuffer()->getBuffer(), node.getVertexBuffer()->getStride() );
 				}
 				else
 				{
 					this->m_pDevice->DrawIndexedPrimitive(mode, 0, 0, node.getVertexBuffer()->getVertexCount(), 0, nPrimitives);
-//					this->m_pDevice->DrawIndexedPrimitiveUP(mode, 0, node.getVertexBuffer()->getVertexCount(), nPrimitives, &node.getIndices()[0], D3DFMT_INDEX32, node.getVertexBuffer()->getBuffer(), node.getVertexBuffer()->getStride() );
+					//					this->m_pDevice->DrawIndexedPrimitiveUP(mode, 0, node.getVertexBuffer()->getVertexCount(), nPrimitives, &node.getIndices()[0], D3DFMT_INDEX32, node.getVertexBuffer()->getBuffer(), node.getVertexBuffer()->getStride() );
 				}
 
 				if(this->m_pShader)
@@ -1002,10 +970,10 @@ public:
 				if(!m_bShadow)	//Kein Shadow pass zeichnen...
 					break;
 			}
-		
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
