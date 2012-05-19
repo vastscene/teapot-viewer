@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="lib3ds">
-      <UniqueIdentifier>{f54ab48a-159b-4ee1-a30b-a077ab20a089}</UniqueIdentifier>
+      <UniqueIdentifier>{e1bbe8b4-c7f3-438b-b99c-4eec939a4e06}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
