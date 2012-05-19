@@ -88,7 +88,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Base.cpp" />
-    <ClCompile Include="WebUpdate.cpp" />
+    <ClCompile Include="src\WebUpdate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Base3DWnd.h" />

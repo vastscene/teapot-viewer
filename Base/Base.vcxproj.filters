@@ -18,7 +18,7 @@
     <ClCompile Include="src\Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WebUpdate.cpp">
+    <ClCompile Include="src\WebUpdate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
