@@ -17,8 +17,8 @@
 #include <wx/wx.h>
 #include <wx/aui/aui.h>
 #include <wx/sysopt.h>
-
-#include "wx/treectrl.h"
+#include <wx/hyperlink.h>
+#include <wx/dnd.h>
 
 #include "Base3DWnd.h"
 #include "OpenGLWnd.h"
@@ -32,6 +32,10 @@
 #include <Scene.h>
 #include <SceneIO.h>
 using namespace eh;
+
+const char* CURRENT_VERSION = "0.9a";
+const char* PROJECT_URL = "http://teapot-viewer.googlecode.com";
+const char* UPDATECHECK_URL = "http://teapot-viewer.googlecode.com/files/UpdateCheck.0.9a.txt";
 
 class MainFrame: public wxFrame
 {
@@ -57,26 +61,31 @@ public:
 		wxID_CAMERA7,
 		wxID_CAMERA8,
 		wxID_CAMERA9,
+		wxEVT_NEWVERSION
 	};
 
 	MainFrame():
 		wxFrame(NULL, wxID_ANY, wxT("Teapot Viewer"), wxDefaultPosition, wxSize(640, 480)),
-		m_p3DWnd(NULL), m_pToolbar(NULL), m_pTree(NULL), m_pGauge(NULL),
+		m_p3DWnd(NULL), m_pGauge(NULL),
 		m_pSceneIO(NULL)
 	{
-		this->SetIcon( wxIcon(wxT("BASE_ICO")) );
+		m_pInstance = this;
 
-		m_mgr.SetManagedWindow(this);
+		this->SetIcon( wxIcon(wxT("BASE_ICO")) );
 
 		wxSystemOptions::SetOption(wxT("msw.remap"), 2);
 
-#if 0
-		m_mgr.AddPane( this->CreateTreeCtrl(), wxAuiPaneInfo().
-			Name(wxT("tree")).Caption(wxT("SceneTree")).LeftDockable()
-			      .PaneBorder(true));
-#endif
-		////////////
+		class DropTarget: public wxFileDropTarget
+        {
+            virtual bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames)
+            {
+                //TODO: Multiple Files...
+				MainFrame::m_pInstance->LoadModel( std::wstring(filenames[0].c_str()), false );
+                return true;
+            }
+        };
 
+        wxWindow::SetDropTarget(new DropTarget());
 
 		//Menu
 
@@ -123,42 +132,12 @@ public:
 		menuBar->Append(pHelpMenu, _T("&Help"));
 		SetMenuBar(menuBar);
 
-		// Toolbar
-#if 0
-		m_pToolbar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT|wxTB_DOCKABLE|::wxTB_NODIVIDER); //this->CreateToolBar();
-
-		//m_pToolbar->SetBackgroundColour( wxColour(255,255,255) );
-
-		m_pToolbar->AddTool(wxID_OPEN, wxT("Open File"), wxBitmap(wxT("OPEN_BMP")), wxT("Open File.."));
-		m_pToolbar->AddSeparator();
-
-		m_pToolbar->AddTool(wxID_PERSPECTIVE, wxT("Perspective"), wxBitmap(wxT("PERSPECTIVE_BMP")), wxT("Perspective Projection"), ::wxITEM_RADIO);
-		m_pToolbar->AddTool(wxID_ORTHOGONAL, wxT("Orthogonal"), wxBitmap(wxT("ORTHOGONAL_BMP")), wxT("Orthogonal Projection"), ::wxITEM_RADIO);
-		m_pToolbar->Realize();
-
-		m_pToolbar->AddSeparator();
-
-		m_mgr.AddPane(m_pToolbar, wxAuiPaneInfo().Name(wxT("tb1")).Caption(wxT("Big Toolbar")).
-			      ToolbarPane().Top().LeftDockable(false).RightDockable(false));
-#endif
 		//Statusbar
 
 		this->CreateStatusBar();
 
-		// Finish
-#if defined(_MSC_VER)
-		for(int i = 0; i < wxApp::GetInstance()->argc; i++)
-		{
-			if( m_p3DWnd == NULL )
-			{
-				if( boost::equals( wxApp::GetInstance()->argv[i], "/opengl") )
-					m_p3DWnd = new OpenGLWnd(this);
+		//////////////////////////
 
-				if( boost::equals( wxApp::GetInstance()->argv[i], "/direct3d9") )
-					m_p3DWnd = new Direct3D9Wnd(this);
-			}
-		}
-#endif
 		if( m_p3DWnd == NULL )
 		{
 
@@ -169,24 +148,109 @@ public:
 #endif
 		}
 
-		m_mgr.AddPane( m_p3DWnd, wxAuiPaneInfo().
-			      Name(wxT("3d")).Caption(wxT("wx3DWnd")).
-			      CenterPane().PaneBorder(false));
+		/////////////////////////
 
-		m_mgr.Update();
+        class CheckForNewVersionThread: public wxThread
+        {
+        public:
+            CheckForNewVersionThread() : wxThread(wxTHREAD_DETACHED)
+            {
+                if(wxTHREAD_NO_ERROR == Create())
+                {
+                    Run();
+                }
+            }
+        protected:
+            virtual ExitCode Entry()
+            {
+                std::string CheckForUpdate(const char* httpUrl);
+
+                std::string ret = CheckForUpdate(UPDATECHECK_URL);
+
+                wxThreadEvent* te = new wxThreadEvent(wxEVT_THREAD, wxEVT_NEWVERSION);
+                te->SetPayload(ret);
+                wxQueueEvent(MainFrame::m_pInstance, te);
+
+                return static_cast<ExitCode>(NULL);
+            }
+        };
+
+        new CheckForNewVersionThread();
+
 	}
+
+	virtual wxStatusBar* CreateStatusBar(int number = 1,
+                                         long style = wxSTB_DEFAULT_STYLE,
+                                         wxWindowID winid = 0,
+                                         const wxString& name = wxStatusLineNameStr)
+    {
+        wxFrame::CreateStatusBar();
+
+        wxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+        sizer->AddStretchSpacer(1);
+
+		m_pGauge = new wxGauge( this->GetStatusBar(), wxID_ANY, 100,
+                                wxDefaultPosition, wxDefaultSize,
+                                wxNO_BORDER|wxHORIZONTAL|wxGA_SMOOTH);
+
+#if defined(_MSC_VER)
+        sizer->Add(m_pGauge, 1, wxALL|wxEXPAND|wxALIGN_RIGHT, 5);
+#else
+        sizer->Add(m_pGauge, 1, wxALL|wxEXPAND|wxALIGN_RIGHT, 2);
+#endif
+        this->GetStatusBar()->SetSizer(sizer);
+
+		this->GetStatusBar()->Layout();
+        m_pGauge->Hide();
+
+        return this->GetStatusBar();
+    }
+
+	void OnNewVersion(wxThreadEvent& evt)
+    {
+        std::string updateCheck = evt.GetPayload<std::string>();
+
+        wxSizer* sizer = this->GetStatusBar()->GetSizer();
+
+        size_t a = updateCheck.find('\t');
+        size_t b = updateCheck.find('\t', a+1);
+
+		wxHyperlinkCtrl* hyperlink = NULL;
+
+        if(a < b)
+        {
+            std::string version = updateCheck.substr(0, a );
+            std::string text = updateCheck.substr(a+1, b-a );
+            std::string url = updateCheck.substr(b+1, updateCheck.size()-b );
+
+
+            if(version != CURRENT_VERSION)
+                hyperlink = new wxHyperlinkCtrl(this->GetStatusBar(), wxID_ANY, wxString(text.c_str()), wxString(url.c_str()));
+        }
+
+		if(hyperlink == NULL)
+				hyperlink = new wxHyperlinkCtrl(this->GetStatusBar(), wxID_ANY, wxT("Teapot-Viewer Website"), wxString(PROJECT_URL));
+
+
+#if defined(_MSC_VER)
+       sizer->Add(hyperlink, 0, wxALL|wxEXPAND|wxALIGN_RIGHT, 5);
+#else
+       sizer->Add(hyperlink, 0, wxALL|wxEXPAND|wxALIGN_RIGHT, 0);
+#endif
+
+
+        sizer->AddSpacer(10);
+    }
 
 	virtual ~MainFrame()
 	{
 		if(m_pSceneIO)
 			delete m_pSceneIO;
-
-		m_mgr.UnInit();
 	}
 
 	virtual void OnInternalIdle()
 	{
-		//SetStatusText( L"Ready" );
+		this->GetStatusBar()->Layout();
 
 		wxFrame::OnInternalIdle();
 	}
@@ -215,7 +279,7 @@ public:
 		{
 			this->UpdateWindowUI();
 
-			LoadModel( dlgOpenFile.GetPath().c_str() );
+			LoadModel( std::wstring(dlgOpenFile.GetPath().c_str()) );
 		}
 	}
 
@@ -225,7 +289,7 @@ public:
 
 		if( dlgSaveFile.ShowModal() == wxID_OK)
 		{
-			getSceneIO()->write( dlgSaveFile.GetPath().c_str(),
+			getSceneIO()->write( std::wstring(dlgSaveFile.GetPath().c_str()),
 					GetViewport()->getScene(),
 					boost::bind(&MainFrame::OnProgress, this, _1));
 		}
@@ -243,14 +307,62 @@ public:
 
 	void OnAbout(wxCommandEvent& WXUNUSED(event))
 	{
-		std::string glinfo = GetViewport()->getDriver()->getDriverInformation();
+		wxSize size(400,400);
+        wxPoint pos = this->GetScreenRect().GetTopLeft() + this->GetScreenRect().GetSize() / 2 - size /2;
+        wxDialog dlg(this, wxID_ANY, wxString::Format(L"About Teapot-Viewer %s", CURRENT_VERSION), pos, size );
 
-		std::wstring about;
-		about += L"TeapotViewer 1.0\n\n";
-		about += L"Copyright (C) 2007-2010 by E.Heidt\nhttp://teapot-viewer.sourceforge.net\n\n";
-		about += getSceneIO()->getAboutString();
-		about += std::wstring(glinfo.begin(), glinfo.end());
-		wxMessageBox( about.c_str() );
+
+#if defined(_MSC_VER)
+        wxStaticBitmap* image = new wxStaticBitmap(&dlg, wxID_ANY, this->GetIcon());
+#else
+        wxStaticBitmap* image = new wxStaticBitmap(&dlg, wxID_ANY, wxPng(APP_ICO));
+#endif
+
+        wxStaticText* label = new wxStaticText(&dlg, wxID_ANY, wxString::Format(L"Teapot-Viewer %s", CURRENT_VERSION));
+        wxStaticText* label2 = new wxStaticText(&dlg, wxID_ANY, wxT("Copyright (C) 2010 by E.Heidt"));
+
+		std::string glinfo = GetViewport()->getDriver()->getDriverInformation();
+		wxStaticText* label3 = new wxStaticText(&dlg, wxID_ANY, wxString(glinfo));
+
+		wxStaticText* label4 = new wxStaticText(&dlg, wxID_ANY, getSceneIO()->getAboutString().c_str());
+
+        wxBoxSizer* h = new wxBoxSizer(wxHORIZONTAL);
+        h->Add(image, 0, wxALL, 20);
+
+
+        wxBoxSizer* v = new wxBoxSizer(wxVERTICAL);
+        v->AddSpacer(32);
+        v->Add(label, 1, wxALL, 0);
+        v->Add(label2, 1, wxALL, 0);
+
+        wxHyperlinkCtrl* hyperlink = new wxHyperlinkCtrl(&dlg, wxID_ANY, wxString(PROJECT_URL), wxString(PROJECT_URL));
+
+        v->Add(hyperlink, 1, wxALL, 0);
+		v->AddStretchSpacer(2);
+
+		v->Add(label4, 1, wxALL, 0);
+
+		v->Add(label3, 1, wxALL, 0);
+
+        h->Add(v, 0, wxALL, 0);
+
+        wxButton* btnOK = new wxButton(&dlg, wxID_OK, wxT("OK"));
+        h->Add(btnOK, 1, wxALL, 20);
+
+
+        dlg.SetSizer(h);
+
+        dlg.ShowModal();
+
+		//std::string glinfo = GetViewport()->getDriver()->getDriverInformation();
+
+		//std::wstring about;
+		//about += L"TeapotViewer 1.0\n\n";
+		//about += L"Copyright (C) 2007-2010 by E.Heidt\nhttp://teapot-viewer.sourceforge.net\n\n";
+		//about += getSceneIO()->getAboutString();
+		//about += L"\n\n";
+		//about += std::wstring(glinfo.begin(), glinfo.end());
+		//wxMessageBox( about.c_str() );
 	}
 
 	bool LoadModel(const std::wstring& sFile, bool bAsThread = false )
@@ -319,11 +431,6 @@ protected:
 			GetViewport()->setModeFlag( Viewport::MODE_ORTHO, event.GetId() != wxID_PERSPECTIVE );
 			this->GetMenuBar()->Check( wxID_PERSPECTIVE, event.GetId() == wxID_PERSPECTIVE );
 			this->GetMenuBar()->Check( wxID_ORTHOGONAL, event.GetId() == wxID_ORTHOGONAL );
-			if( m_pToolbar )
-			{
-				this->m_pToolbar->ToggleTool( wxID_PERSPECTIVE, event.GetId() == wxID_PERSPECTIVE );
-				this->m_pToolbar->ToggleTool( wxID_ORTHOGONAL, event.GetId() == wxID_ORTHOGONAL );
-			}
 			break;
 		default:
 			{
@@ -365,68 +472,35 @@ protected:
 	{
 		if(p == 1.f)
 		{
-			if(m_pGauge)
-			{
-				m_pGauge->Hide();
-				delete m_pGauge;
-				m_pGauge = NULL;
-				GetStatusBar()->SetFieldsCount(1);
-			}
-			return;
+			m_pGauge->Hide();
 		}
-
-		if(m_pGauge == NULL)
+		else
 		{
-			int widths[] = { -1, 100 };
-			GetStatusBar()->SetFieldsCount(2, widths);
-			wxRect rect;
-			this->GetStatusBar()->GetFieldRect(1, rect);
-			m_pGauge = new wxGauge( this->GetStatusBar(), ::wxID_ANY, 100,
-						rect.GetLeftTop(), rect.GetSize(),
-						wxNO_BORDER|wxHORIZONTAL|wxGA_SMOOTH);
-		}
-
-		if(m_pGauge)
-		{
-			wxRect rect;
-			this->GetStatusBar()->GetFieldRect(1, rect);
-
-			m_pGauge->SetSize( rect.GetSize() );
-			m_pGauge->Move( rect.GetLeftTop() );
-
 			m_pGauge->SetValue( (int)(p*100.f));
+            m_pGauge->Show();
+			this->GetStatusBar()->Layout();
 
-			m_pGauge->Show();
+			SetStatusText( std::wstring(wxString::Format(wxT("Processing %s ... %d%%"),
+							SceneIO::File(m_sCurrentFile).getName().c_str(), (int)(p*100) ).c_str()) );
 		}
-
-		SetStatusText( wxString::Format(wxT("Loading %s ... %d%%"),
-							SceneIO::File(m_sCurrentFile).getName().c_str(), (int)(p*100) ).c_str() );
-	}
-
-	wxTreeCtrl* CreateTreeCtrl()
-	{
-
-	    m_pTree = new wxTreeCtrl(this, wxID_ANY,
-					      wxPoint(0,0), wxSize(160,250),
-					      wxTR_DEFAULT_STYLE | wxNO_BORDER);
-
-	    //wxImageList* imglist = new wxImageList(16, 16, true, 2);
-	    //imglist->Add(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16,16)));
-	    //imglist->Add(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16)));
-	    //m_pTree->AssignImageList(imglist);
-
-	    return m_pTree;
 	}
 
 	wxWindow* m_p3DWnd;
-	wxToolBar* m_pToolbar;
-	wxAuiManager m_mgr;
-	wxTreeCtrl* m_pTree;
+
 	wxGauge* m_pGauge;
 	SceneIO* m_pSceneIO;
 	std::wstring m_sCurrentFile;
 
+	static MainFrame* m_pInstance;
+
+    wxDECLARE_EVENT_TABLE();
 };
+
+wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
+EVT_THREAD(wxEVT_NEWVERSION, MainFrame::OnNewVersion)
+wxEND_EVENT_TABLE()
+
+MainFrame* MainFrame::m_pInstance = NULL;
 
 class MyApp : public wxApp
 {
@@ -436,14 +510,16 @@ public:
 		MainFrame* pFrame = new MainFrame();
 
 		pFrame->Show(true);
-
+#if defined(_MSC_VER)
+		for(int i = 1; i < this->argc; i++)
+#else
 		for(int i = 0; i < this->argc; i++)
+#endif
 		{
 			if(!boost::equals(this->argv[i], "/direct3d9"))
 			if(!boost::equals(this->argv[i], "/opengl"))
-				pFrame->LoadModel( this->argv[i] );
+				pFrame->LoadModel( std::wstring(this->argv[i]) );
 		}
-
 
 		return true;
 	}
