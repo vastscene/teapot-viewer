@@ -133,7 +133,7 @@ public:
 
 	virtual std::wstring about() const
 	{
-		return L"OpenCascade STEP/IGES/BREP Loader";
+		return L"OpenCascade Loader";
 	}
 
 	virtual Uint file_type_count() const
