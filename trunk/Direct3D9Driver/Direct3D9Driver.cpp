@@ -328,7 +328,7 @@ public:
 		m_bShadow(true),
 		pSwapChain(NULL),
 		hr(0),
-		nAntialiasingLevel(0),
+		nAntialiasingLevel(8),
 		m_viewport()
 	{
 		assert(::IsWindow(hWnd));
